@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="10mm"
+   height="10mm"
+   viewBox="0 0 10 10"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="/home/hermann/nextcloud/coding/echemlab/autotag_metadata/autotag_metadata/autotag_icon.png"
+   inkscape:export-xdpi="650.23999"
+   inkscape:export-ydpi="650.23999"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="11.95881"
+     inkscape:cx="-6.7732492"
+     inkscape:cy="45.238615"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ffffff;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect1422"
+       width="10"
+       height="10"
+       x="5e-07"
+       y="5e-07"
+       ry="1.0740091"
+       inkscape:export-filename="/home/hermann/nextcloud/coding/echemlab/autotag_metadata/autotag_metadata/rect1422.png"
+       inkscape:export-xdpi="650.23999"
+       inkscape:export-ydpi="650.23999" />
+    <g
+       id="g15751"
+       transform="matrix(0.60793054,-0.64377129,0.64377129,0.60793054,-85.809174,7.4704301)"
+       style="stroke-width:1.12937;stroke-miterlimit:4;stroke-dasharray:none;stroke:#0200ff;stroke-opacity:1">
+      <path
+         style="fill:none;stroke:#0200ff;stroke-width:1.12937;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 70,70 c 0.0068,1.541667 0.0053,6.403755 0,7 -0.0054,0.606364 4.988953,0.537941 5,0 0.01489,-0.725277 0.01281,-4.762947 0,-7 -0.0077,-1.340543 -2.056815,-4.013948 -2.5,-4 -0.445437,0.01402 -2.50564,2.721232 -2.5,4 z"
+         id="path11375"
+         sodipodi:nodetypes="ssssss" />
+      <g
+         id="g4750"
+         style="stroke:#ff0000;stroke-opacity:1;stroke-width:1.24230671;stroke-miterlimit:4;stroke-dasharray:none"
+         transform="translate(13.320083,2.389049)">
+        <path
+           style="fill:none;stroke:#ff0000;stroke-width:1.24230671;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 61.707537,71.078608 c 0.01489,-0.725277 -0.01481,-1.230604 -0.02762,-3.467657 -0.0077,-1.340543 -2.056815,-4.013948 -2.5,-4 -0.445437,0.01402 -2.50564,2.721232 -2.5,4 0.0068,1.541667 0.03293,2.871412 0.02762,3.467657"
+           id="path11375-3"
+           sodipodi:nodetypes="csssc" />
+        <path
+           style="fill:#81695b;fill-opacity:1;stroke:#ff0000;stroke-width:1.24230671;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 61.679917,67.610951 h -5"
+           id="path966"
+           sodipodi:nodetypes="cc" />
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.15;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="5.9144869"
+       y="1.6114211"
+       id="text3714"
+       transform="rotate(43.879031)"><tspan
+         sodipodi:role="line"
+         id="tspan3712"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="5.9144869"
+         y="1.6114211">M</tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,37 @@
+# inspired by the pylint repo
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autotag-metadata"
+license     = {text = "GPL-3.0-or-later"}
+description = "Tool to auto-write metadata files on file creation"
+authors = [
+  {name = "Johannes Hermann", email = "johannes.hermann@uni-ulm.de"},
+]
+readme      = "README.md"
+requires-python = ">=3.6.0"
+dependencies    = [
+    "desktop-app",
+    "pyqt5",
+    "watchdog",
+    "pint",
+    "yamllint",
+    "toml",
+]
+version = "0.1.0"
+
+[project.urls]
+repository = "https://github.com/echemdb/autotag-metadata"
+
+[tool.setuptools]
+packages = ["autotag_metadata"]
+license-files = ["LICENSE"]  # Keep in sync with setup.cfg
+include-package-data = true
+
+[tool.setuptools.package-data]
+autotag_metadata = ["*.svg", "*.ico", "desktop-app.json"]
+
+[project.gui-scripts]
+autotag_metadata = "desktop_app:entry_point"

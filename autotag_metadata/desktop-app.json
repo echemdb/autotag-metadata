@@ -1,0 +1,10 @@
+{
+    "org_name": "eChemLabUlm",
+    "modules": {
+        "autotag_metadata": {
+            "display_name": "Autotag Metadata",
+            "icon": "autotag_metadata.svg",
+            "winicon": "autotag_metadata.ico"
+        }
+    }
+}
