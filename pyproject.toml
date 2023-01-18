@@ -13,7 +13,8 @@ authors = [
 readme      = "README.md"
 requires-python = ">=3.6.0"
 dependencies    = [
-    "desktop-app",
+    # "desktop-app", workaround for fix not yet on pypi for winpython
+    "desktop-app @ git+https://github.com/chrisjbillington/desktop-app",
     "pyqt5",
     "watchdog",
     "pint",
@@ -26,12 +27,18 @@ version = "0.1.0"
 repository = "https://github.com/echemdb/autotag-metadata"
 
 [tool.setuptools]
-packages = ["autotag_metadata"]
 license-files = ["LICENSE"]  # Keep in sync with setup.cfg
 include-package-data = true
 
 [tool.setuptools.package-data]
 autotag_metadata = ["*.svg", "*.ico", "desktop-app.json"]
+"autotag_metadata.ui" = ["*.ui"]
+
+[tool.setuptools.packages.find]
+exclude = ["helpers"] 
+
+[project.scripts]
+autotag_metadata = "desktop_app:entry_point"
 
 [project.gui-scripts]
-autotag_metadata = "desktop_app:entry_point"
+autotag_metadata-gui = "desktop_app:entry_point"
