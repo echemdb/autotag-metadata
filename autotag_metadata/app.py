@@ -307,7 +307,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         """
         try:
             sha512_hash = hashlib.sha512()
-            with open(filename, "rb", encoding="utf-8") as file:
+            with open(filename, "rb") as file:
                 # Read and update hash string value in blocks of 4K
                 for byte_block in iter(lambda: file.read(4096), b""):
                     sha512_hash.update(byte_block)
