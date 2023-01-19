@@ -27,6 +27,8 @@ First select a folder that you whish to observe for file creation.
 
 The folder will only be observed when the program is activated. It can also be tuned off any time.
 
+When the program is running and a new file is created (`test.txt`), the current content from `raw yaml` will be written into a new file in the same folder name `test.txt.meta.yaml`.
+
 3. metadata input
 
 When the program is started the mask is empty and metadata must be added in the `Raw Yaml` tab. such as:
