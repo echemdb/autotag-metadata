@@ -12,37 +12,64 @@ kernelspec:
   name: python3
 ---
 
-Welcome to echemdb's documentation!
+Welcome to autotag-metadata's documentation!
 ===================================
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/echemdb/echemdb/0.4.0?urlpath=tree%2Fdoc%2Fusage%2Fentry_interactions.md)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6502901.svg)](https://doi.org/10.5281/zenodo.6502901)
 
-This echemdb module provides a Python library to interact with a database of
-[frictionless datapackages](https://frictionlessdata.io/)
-containing electrochemical data following [echemdb's metadata schema](https://github.com/echemdb/metadata-schema).
-Such a database can be generated from the data on [echemdb.org](https://www.echemdb.org)
-or from local files.
+Autotag-metadata allows automatic creation of metadata files upon file creation. The input metadata file can be added in a simple GUI or from template YAML files.
+The program was originally developed to create metadata files for experimental data acquired in a laboratory. However, it can in principle be used in any process where files are generated in the file system.
 
-Examples
-========
+Input and output metadata files are currently in the YAML format, which can easily be converted in any other kinds of formats such as JSON, XML, ...
 
-..: TODO
+The benefit of recording such metadata files is that these machine readable metadata files allow for further usage of the research data in following data management workflows, i.e., to transfer files to a data repository, to update electronic lab notebooks, or perform automated data evaluation based on the available metadata.
+
+Example
+=======
+
+Assume one records automatically in the laboratory the change in color of a fruit at different temperatures, i.e., of a banana. For the first temperature the program returns a `banana.csv` and or the second a `banana2.csv`. These files contain a limited amount of information, such as a time `t` and intensity `I` axis.
+
+All other information on the experimentalist, the banana, and other starting parameters would have to be stored elsewhere (sheet of paper or - electronic - lab notebook). All this information can be pre-defined in autotag-metadata such as:
+
+```
+experimentalist: Max Mustermann
+supervisor: John Doe
+project: degradation
+equipment:
+  - temperature sensor XY
+  - color probe 2.0
+starting temperature:
+  value: 300
+  unit: K
+humidity:
+  value: 80
+  unit: %
+fruit:
+  type: banana
+  purchased: YYYY.MM.DD
+  supplier: Banana corp.
+```
+
+When autotag-metadata is active when `banana.csv` is generated, a new file `banana.csv.meta.yaml` is written in the same folder, which contains the pre-defined set of metadata. The next measurement is supposed to be done at 320 K. In that case, while autotag-metadata is running, we change in the mask of the programm the temperature from 300 to 320 K. Once the next file is created, here `banana2.csv` the newly created `banana2.csv.meta.yaml` will contain the updated temperature.
+
+An elaborate metadata file for an electrochemistry experiment can be found [echemdbs' metadata schema](https://github.com/echemdb/metadata-schema/blob/main/examples/file_schemas/autotag.yaml) repository.
+
+```{note}
+The program can be launched multiple times to observe multiple folders.
+```
+
+Refer to the [usage](usage.md) section for more details on the GUI.
+<!--
+```{todo}
+* explain installation for developers.
+* explain installation from conda-forge, assuming we release it there soon.
+* explain installation from PyPI, assuming we release it there soon.
+* only leave the very basics of installation in the README and refer here instead.
+```
+-->
 
 Installation
-=========
+============
 
-This package is available on [PiPY](https://pypi.org/project/echemdb/) and can be installed with pip:
-
-```sh .noeval
-pip install echemdb
-```
-The package is also available on [conda-forge](https://github.com/conda-forge/echemdb-feedstock) an can be installed with conda:
-
-```sh .noeval
-conda install -c conda-forge echemdb
-```
-
-See the [installation instructions](installation.md) for further details.
+See the [installation instructions](installation.md) for details.
 
 +++
 
@@ -51,4 +78,5 @@ See the [installation instructions](installation.md) for further details.
 :caption: "Contents:"
 :hidden:
 installation.md
+usage.md
 ```
