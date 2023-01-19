@@ -25,7 +25,7 @@ Fedora/RPM-based distribution:
 
 Download and install [Git Bash](https://gitforwindows.org/)
 
-## Install Autotag
+## Install Autotag Metadata
 
 Open a terminal and execute (On Windows right click on a folder and choose `Git Bash` from the context menu.)
 
@@ -39,7 +39,7 @@ Create an icon in the start menu
 desktop-app install autotag_metadata
 ```
 
-## Starting Autotagger
+## Starting Autotag Metadata
 
 From the (Windows) start menu launch `autotag_metadata`
 ![icon](autotag_metadata/autotag_metadata.ico)
