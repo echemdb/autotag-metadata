@@ -12,13 +12,13 @@ Download and install the appropriate [miniconda package](https://docs.conda.io/e
 
 Debian/apt-based distribution:
 
-```
+```sh
  sudo apt-get install git
 ```
 
 Fedora/RPM-based distribution:
 
-```
+```sh
  sudo dnf install git-all
 ```
 
@@ -43,9 +43,9 @@ desktop-app install autotag_metadata
 ## Starting Autotagger
 
 From the (Windows) start menu launch `autotag_metadata`
-![icon](autotag_metadata/autotag.ico)
+![icon](autotag_metadata/autotag_metadata.ico)
 
-The program can be launched multiple times to observe different folders.
+Multiple instances of the program can be launched to observe different folders.
 
 # Installation instructions for developers
 
