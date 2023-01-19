@@ -1,4 +1,3 @@
-[![pipeline status](https://github.com/echemdb/autotag-metadata/badges/master/pipeline.svg)](https://github.com/echemdb/autotag-metadata/-/commits/master)
 # Installation instructions
 
 ## Requirements
@@ -60,7 +59,7 @@ Install dependencies
 
 ```sh
 conda env create --name autotag --file environment-dev.yml
-conda activate autotag
+conda activate autotag_metadata-dev
 pip install -e .
 ```
 
