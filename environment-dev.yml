@@ -31,4 +31,3 @@ dependencies:
   - types-toml>=0.10.0,<0.11.0
   - watchdog>=2.1,<2.2
   - yamllint>=1.26,<2
-
