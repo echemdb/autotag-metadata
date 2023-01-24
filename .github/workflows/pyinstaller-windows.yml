@@ -35,7 +35,7 @@ jobs:
         pip install --no-dependencies .
 
     - name: Package Application
-      uses: JackMcKew/pyinstaller-action-windows@main
+      uses: bkVBC/pyinstaller-action-windows@main
       with:
         path: .
         spec: autotag-metadata.spec
