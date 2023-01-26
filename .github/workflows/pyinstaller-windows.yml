@@ -47,7 +47,7 @@ jobs:
 
         uses: actions/upload-artifact@v3
         with:
-          name: dist
+          name: desktop-app
           path: ./dist
 
   build:
@@ -76,11 +76,11 @@ jobs:
     - name: Download Artifact
       uses: actions/download-artifact@v3
       with:
-        name: dist
+        name: desktop-app
         path: ./dist
     - name: debug
       run: |
-        ls -la .
+        ls -la ./dist
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
       with:
