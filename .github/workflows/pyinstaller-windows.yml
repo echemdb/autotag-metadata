@@ -51,16 +51,16 @@ jobs:
           path: ./dist
 
   build:
-
+    name: Build autotag-metadata.exe
     runs-on: ubuntu-latest
-
+    needs: [build-desktop-app]
     steps:
     - name: Download Artifact
       uses: actions/download-artifact@v3
       with:
         name: dist
         path: ./dist
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with: { submodules: recursive }
     # - uses: conda-incubator/setup-miniconda@v2
     #   with:
@@ -84,7 +84,7 @@ jobs:
       with:
         path: .
         spec: autotag-metadata.spec
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: autotag-metadata
         path: dist/windows
