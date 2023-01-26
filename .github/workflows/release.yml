@@ -1,0 +1,28 @@
+name: Release autotag-metadata
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_run:
+    workflows: ["Build GUI exe with Pyinstaller"]
+    type:
+      - complete
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Checkout
+      #   uses: actions/checkout@v3
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: autotag-metadata
+          path: .
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            autotag-metadata.exe
+            LICENSE
