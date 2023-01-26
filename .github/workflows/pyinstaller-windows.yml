@@ -78,7 +78,9 @@ jobs:
     #   shell: bash -l {0}
     #   run: |
     #     pip install --no-dependencies .
-
+    - name: debug
+      run: |
+        ls -la .
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
       with:
