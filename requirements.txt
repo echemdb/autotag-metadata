@@ -1,4 +1,4 @@
-./dist/*.whl
+./dist/desktop_app-0.2.11.dev7+g3701c2b-cp310-cp310-win_amd64.whl
 pint
 PyQt5
 toml
