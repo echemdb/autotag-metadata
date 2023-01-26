@@ -55,11 +55,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-desktop-app]
     steps:
-    - name: Download Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: dist
-        path: ./dist
     - uses: actions/checkout@v3
       with: { submodules: recursive }
     # - uses: conda-incubator/setup-miniconda@v2
@@ -78,9 +73,14 @@ jobs:
     #   shell: bash -l {0}
     #   run: |
     #     pip install --no-dependencies .
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: ./dist
     - name: debug
       run: |
-        ls -la ..
+        ls -la .
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
       with:
