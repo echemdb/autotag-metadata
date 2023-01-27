@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: desktop-app
-          path: ./desktop-app
+          path: ./dist
 
   build:
     name: Build autotag-metadata.exe
@@ -57,7 +57,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: desktop-app
-        path: ./dist
+        path: ./desktop-app
 
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
