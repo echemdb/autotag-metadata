@@ -57,7 +57,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: desktop-app
-        path: ./desktop-app
+        path: ./dist
 
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
