@@ -40,12 +40,12 @@ jobs:
           mamba env update --quiet -n test -f environment-dev.yml
           mamba list
         if: ${{ matrix.source == 'conda' }}
-      - name: Install Autotag-Metadata
+      - name: Install Autotag-Metadata (conda)
         shell: bash -l {0}
         run: |
           pip install --no-dependencies .
         if: ${{ matrix.source == 'conda' }}
-      - name: Install Autotag-Metadata
+      - name: Install Autotag-Metadata (pip)
         shell: bash -l {0}
         run: |
           pip install .
