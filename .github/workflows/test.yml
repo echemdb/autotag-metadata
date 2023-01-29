@@ -53,7 +53,7 @@ jobs:
       - name: Doctest
         shell: bash -l {0}
         run: |
-          pytest --doctest-modules autotag-metadata
+          pytest --doctest-modules autotag_metadata
         if: ${{ matrix.source == 'conda' }}        
       - name: Byexample
         shell: bash -l {0}
