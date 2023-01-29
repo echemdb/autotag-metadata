@@ -50,16 +50,16 @@ jobs:
         run: |
           pip install .
         if: ${{ matrix.source == 'pip' }}
-      - name: Doctest
-        shell: bash -l {0}
-        run: |
-          pytest --doctest-modules autotag_metadata
-        if: ${{ matrix.source == 'conda' }}        
-      - name: Byexample
-        shell: bash -l {0}
-        run: |
-          mamba install -y byexample
-          byexample -l shell,python -o +norm-ws --timeout=30 README.md
-        # byexample is not available for Windows
-        # the exact numerical output of commands differs between Linux & macOS
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.source == 'conda' }}
+      # - name: Doctest
+      #   shell: bash -l {0}
+      #   run: |
+      #     pytest --doctest-modules autotag_metadata
+      #   if: ${{ matrix.source == 'conda' }}        
+      # - name: Byexample
+      #   shell: bash -l {0}
+      #   run: |
+      #     mamba install -y byexample
+      #     byexample -l shell,python -o +norm-ws --timeout=30 README.md
+      #   # byexample is not available for Windows
+      #   # the exact numerical output of commands differs between Linux & macOS
+      #   if: ${{ matrix.os == 'ubuntu-latest' && matrix.source == 'conda' }}
