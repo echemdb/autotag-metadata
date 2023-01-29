@@ -16,11 +16,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: windows-exe
-          path: .
+          path: installer
       - name: Build Setup
         shell: bash
         run: |
           cd installer
+          ls -la
           "$CANDLE" autotag-metadata-gui.wxs -o obj/ -ext WixUtilExtension -ext WixUIExtension
           "$LIGHT" obj/*.wixobj -o bin/Installer.msi -ext WixUtilExtension -ext WixUIExtension
       - name: Upload Artifact
