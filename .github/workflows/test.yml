@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test-windows-executable-build:
     name: Build Windows Executable
-    uses: ./.github/workflows/build-windows.yml
+    uses: ./.github/workflows/build-windows-exe.yml
   test-create-windows-installer:
     name: Create Windows Installer
     needs: test-windows-executable-build

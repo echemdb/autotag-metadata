@@ -8,7 +8,7 @@ on:
 jobs:
   windows-executable-build:
     name: Build Windows Executable
-    uses: ./.github/workflows/build-windows.yml
+    uses: ./.github/workflows/build-windows-exe.yml
   create-windows-installer:
     name: Create Windows Installer
     needs: windows-executable-build
