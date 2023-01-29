@@ -43,7 +43,7 @@ jobs:
       - name: Install Autotag-Metadata
         shell: bash -l {0}
         run: |
-          pip Install --no-dependencies .
+          pip install --no-dependencies .
         if: ${{ matrix.source == 'conda' }}
       - name: Install Autotag-Metadata
         shell: bash -l {0}
