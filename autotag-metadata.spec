@@ -5,12 +5,12 @@ block_cipher = None
 
 
 a = Analysis(
-    ['autotag_metadata\\__main__.py'],
+    ["autotag_metadata\\__main__.py"],
     pathex=[],
     binaries=[],
-    datas=[('README.md', '.'),
-    ('autotag_metadata\\ui\\main_window.ui', 'autotag_metadata\\ui'),
-    ('autotag_metadata\\ui\\template_dialog.ui', 'autotag_metadata\\ui')],
+    datas=[("README.md", "."),
+    ("autotag_metadata\\ui\\main_window.ui", "autotag_metadata\\ui"),
+    ("autotag_metadata\\ui\\template_dialog.ui", "autotag_metadata\\ui")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -30,7 +30,8 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='autotag-metadata',
+    name="autotag-metadata",
+    icon="autotag_metadata/autotag_metadata.ico",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -1,26 +1,35 @@
-name: Release autotag-metadata
+name: Release
 
 on:
-  workflow_run:
-    workflows: ["Build GUI exe with Pyinstaller"]
-    type:
-      - complete
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
-  build:
+  windows-executable-build:
+    name: Build Windows Executable
+    uses: ./.github/workflows/build-windows.yml
+  create-windows-installer:
+    name: Create Windows Installer
+    needs: windows-executable-build
+    uses: ./.github/workflows/create-windows-installer.yml
+
+  github-release:
+    needs: windows-executable-build
     runs-on: ubuntu-latest
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Download Artifact
         uses: actions/download-artifact@v3
-        with:
-          name: autotag-metadata
-          path: .
+      - name: Rename Files
+        shell: bash -l {0}
+        run: |
+          mv Installer.msi Autotag-Metadata-Installer-${{ github.ref_name }}.msi
+          mv autotag-metadata.exe autotag-metadata-${{ github.ref_name }}.exe
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            autotag-metadata.exe
-            LICENSE
-        if: startsWith(github.ref, 'refs/tags/')
+            autotag-metadata-${{ github.ref_name }}.exe
+            Autotag-Metadata-Installer-${{ github.ref_name }}.msi
