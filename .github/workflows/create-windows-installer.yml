@@ -18,6 +18,7 @@ jobs:
           name: windows-exe
           path: .
       - name: Build Setup
+        shell: bash
         run: |
           cd installer
           "$CANDLE" autotag-metadata.wxs -o obj\ -ext WixUtilExtension -ext WixUIExtension
