@@ -28,5 +28,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: windows-installer
-          path: bin/Installer.msi
+          path: installer/bin/Installer.msi
           if-no-files-found: error
