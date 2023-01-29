@@ -20,3 +20,4 @@ jobs:
       with:
         name: windows-exe
         path: dist/windows
+        if-no-files-found: error
