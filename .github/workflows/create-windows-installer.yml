@@ -21,9 +21,9 @@ jobs:
         shell: bash
         run: |
           cd installer
-          ls -la
           "$CANDLE" autotag-metadata-gui.wxs -o obj/ -ext WixUtilExtension -ext WixUIExtension
           "$LIGHT" obj/*.wixobj -o bin/Installer.msi -ext WixUtilExtension -ext WixUIExtension
+          ls -la
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
