@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/create-windows-installer.yml
 
   github-release:
-    needs: windows-executable-build
+    needs: create-windows-installer
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
