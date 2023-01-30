@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/create-windows-installer.yml
 
   github-release:
-    needs: windows-executable-build
+    needs: create-windows-installer
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,8 +25,8 @@ jobs:
       - name: Rename Files
         shell: bash -l {0}
         run: |
-          mv Installer.msi Autotag-Metadata-Installer-${{ github.ref_name }}.msi
-          mv autotag-metadata.exe autotag-metadata-${{ github.ref_name }}.exe
+          mv windows-installer/Installer.msi Autotag-Metadata-Installer-${{ github.ref_name }}.msi
+          mv windows-exe/autotag-metadata.exe autotag-metadata-${{ github.ref_name }}.exe
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
