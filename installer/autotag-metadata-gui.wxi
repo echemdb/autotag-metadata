@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Include>
+<!-- define variables for later use -->
+<?define Manufacturer = "echemdb" ?>
+<?define Name = "Autotag-Metadata" ?>
+<?define Version = "0.1.0" ?>
+<?define Description = "GUI Application for automatically writing metadata for new files in a watched folder." ?>
+<!-- must not change to allow upgrades -->
+<?define UpgradeCode = "{0bb0b81d-cce6-4727-b5d2-8f2e227d86c7}" ?>
+</Include>

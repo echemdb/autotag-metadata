@@ -1,0 +1,6 @@
+desktop-app
+pint
+PyQt5
+toml
+watchdog
+yamllint

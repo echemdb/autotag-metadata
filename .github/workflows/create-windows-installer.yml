@@ -1,0 +1,32 @@
+name: Create Windows Installer
+
+on:
+  workflow_call:
+
+jobs:
+  create-installer:
+    runs-on: windows-latest
+    env:
+      CANDLE: "C:/Program Files (x86)/WiX Toolset v3.11/bin/candle.exe"
+      LIGHT: "C:/Program Files (x86)/WiX Toolset v3.11/bin/light.exe"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-exe
+          path: installer
+      - name: Build Setup
+        shell: bash
+        run: |
+          cd installer
+          "$CANDLE" autotag-metadata-gui.wxs -o obj/ -ext WixUtilExtension -ext WixUIExtension
+          "$LIGHT" obj/*.wixobj -o bin/Installer.msi -ext WixUtilExtension -ext WixUIExtension
+          ls -la bin
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-installer
+          path: installer/bin/Installer.msi
+          if-no-files-found: error

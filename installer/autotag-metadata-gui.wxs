@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include $(sys.CURRENTDIR)autotag-metadata-gui.wxi?>
+
+  <Product Id="*" Name="$(var.Name)" Manufacturer="$(var.Manufacturer)"
+    UpgradeCode="$(var.UpgradeCode)" Version="$(var.Version)" Language="1033">
+    <!-- install on per machine basis on x64 -->
+    <Package Id='*' InstallerVersion="200" Compressed="yes" InstallScope="perMachine"
+      Platform="x64" />
+    <!-- produce a single msi file -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <WixVariable Id="WixUILicenseRtf" Value="gpl-3.0.rtf" />
+    <Icon Id="autotag_metadata.ico" SourceFile="..\autotag_metadata\autotag_metadata.ico" />
+    <!-- set icon in Add/Remove Programs -->    
+    <Property Id="ARPPRODUCTICON" Value="autotag_metadata.ico" />
+    <!-- allow to choose installtion folder --> 
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir"></UIRef>
+
+    <Feature Id="AutotagMetadata" Title="$(var.Name)" Level="1">
+      <ComponentGroupRef Id="AutotagMetadataComponents" />
+      <ComponentRef Id="AutotagMetadataShortcut" />
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
+          <Directory Id="INSTALLFOLDER" Name="$(var.Name)">
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AutotagMetadataProgramsFolder" Name="$(var.Name)" />
+      </Directory>
+    </Directory>
+
+    <!-- files to install, one component per file -->
+    <ComponentGroup Id="AutotagMetadataComponents" Directory="INSTALLFOLDER">
+      <Component Id="autotag_metadata.exe" Guid="*" Win64="yes">
+        <File Id="autotag_metadata.exe" Source="autotag-metadata.exe" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- create shortcuts and registry entry -->
+    <DirectoryRef Id="AutotagMetadataProgramsFolder">
+      <Component Id="AutotagMetadataShortcut" Guid="*" Win64="yes">
+        <Shortcut Id="AutotagMetadataMenuShortcut" Name="$(var.Name)"
+          Description="$(var.Description)"
+          Target="[INSTALLFOLDER]autotag-metadata.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Directory="AutotagMetadataProgramsFolder"
+          Icon="autotag_metadata.ico"/>
+        <Shortcut Id="UninstallAutotagMetadata"
+          Name="Uninstall $(var.Name)"
+          Description="Uninstalls $(var.Name)"
+          Target="[System64Folder]msiexec.exe"
+          Directory="AutotagMetadataProgramsFolder"
+          Arguments="/x [ProductCode]" />
+        <RemoveFolder Id="AutotagMetadataProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+          Key="Software\Microsoft\$(var.Manufacturer)\$(var.Name)"
+          Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+  </Product>
+
+</Wix>
