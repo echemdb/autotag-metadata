@@ -1,4 +1,4 @@
-![test status](https://github.com/echemdb/autotag/actions/workflows/test.yml/badge.svg)
+![test status](https://github.com/echemdb/autotag-metadata/actions/workflows/test.yml/badge.svg)
 # Installation instructions
 
 ## Requirements
