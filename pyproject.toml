@@ -13,8 +13,7 @@ authors = [
 readme      = "README.md"
 requires-python = ">=3.6.0"
 dependencies    = [
-    # "desktop-app", workaround for fix not yet on pypi for winpython
-    "desktop-app @ git+https://github.com/chrisjbillington/desktop-app",
+    "desktop-app",
     "pyqt5",
     "watchdog",
     "pint",
