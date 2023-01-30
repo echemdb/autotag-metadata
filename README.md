@@ -1,4 +1,4 @@
-[![pipeline status](https://github.com/echemdb/autotag-metadata/badges/master/pipeline.svg)](https://github.com/echemdb/autotag-metadata/-/commits/master)
+![test status](https://github.com/echemdb/autotag-metadata/actions/workflows/test.yml/badge.svg)
 # Installation instructions
 
 ## Requirements
