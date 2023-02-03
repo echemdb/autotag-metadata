@@ -29,4 +29,5 @@ dependencies:
   - sphinx_rtd_theme>=1,<2
   - pip>22
   - toml>0.10
-  - desktop-app>0.2
+  - desktop-app>=0.3
+  - pyinstaller>=5.7.0
