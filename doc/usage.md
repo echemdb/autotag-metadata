@@ -15,7 +15,7 @@ kernelspec:
 User manual
 ===========
 
-The following figure shows the GUI of autotag-metadata.
+The autotag-metadata GUI is illustrated in the following figure.
 
 ![Alt text](images/layout_annotated.png)
 
@@ -33,10 +33,11 @@ When the program is running and a new file is created (`test.txt`), the current 
 
 When the program is started the mask is empty and metadata must be added in the `Raw Yaml` tab. such as:
 
-```
+```yaml
 user: John
 experiment: 10
 ```
+
 When the input is not valid [YAML](https://en.wikipedia.org/wiki/YAML), the background color will change to purple.
 
 Elaborate examples on how a YAML file could look like, can be found in the example section of [echemdbs' metadata-schema](https://github.com/echemdb/metadata-schema/tree/main/examples).

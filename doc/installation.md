@@ -1,53 +1,48 @@
-Installation
-============
+# Installation
 
-## Requirements
+## Windows
 
-**Install Conda:**
-Download and install the appropriate [miniconda package](https://docs.conda.io/en/latest/miniconda.html) for your platform.
+The latest installer and/or executable can be found in the [release section](https://github.com/echemdb/autotag-metadata/releases).
 
-**Install Git:**
+Launch the program from the start menu.
 
-* **Linux**
-
-Debian/apt-based distribution:
-
-```sh
- sudo apt-get install git
+```{note}
+Multiple instances of the program can be launched to observe different folders.
 ```
 
-Fedora/RPM-based distribution:
+## From a Terminal
 
-```sh
- sudo dnf install git-all
-```
+### Requirements
 
-* **Windows**
+* *Windows*: A terminal such as [Git Bash](https://gitforwindows.org/).
+* *All platforms*: Download and install the appropriate [miniconda package](https://docs.conda.io/en/latest/miniconda.html) or [micromamba package](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html) for your platform.
+* *All platforms*: Check if `pip` is installed, else `conda install pip` or `mamba install pip`.
 
-Download and install [Git Bash](https://gitforwindows.org/)
+### Installation steps
 
-## Install Autotag Metadata
-
-Open a terminal and execute (On Windows right click on a folder and choose `Git Bash` from the context menu.)
+Open a terminal and execute (*Windows*: right click on a folder and choose `Git Bash` from the context menu.)
 
 ```sh
 pip install git+https://github.com/echemdb/autotag-metadata
 ```
 
-Create an icon in the start menu
+*Windows*: Create an icon in the start menu
 
 ```sh
 desktop-app install autotag_metadata
 ```
 
-## Starting Autotag Metadata
+### Starting Autotag-Metadata
 
-From the (Windows) start menu launch `autotag_metadata`
-![icon](../autotag_metadata/autotag_metadata.ico)
+```sh
+python -m autotag_metadata
+```
 
+```{note}
 Multiple instances of the program can be launched to observe different folders.
+```
 
-## Installation instructions for developers
+## For developers
 
 Download the repository
 
@@ -69,3 +64,5 @@ Starting autotag-metadata
 ```sh
 python -m autotag_metadata
 ```
+
+To verify changes made to the documentation refer to the [readme](https://github.com/echemdb/autotag-metadata/tree/main/doc/readme.md) in the repository.
