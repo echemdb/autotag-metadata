@@ -39,7 +39,8 @@ jobs:
         run: |
           python -m http.server 8880 --directory doc/generated/html &
           sleep 1
-          linkchecker --check-extern http://localhost:8880/autotag-metadata --no-robots
+          # sphinx creates a genindex page with an edit on github button, but that page does not exist in the repository.
+          linkchecker --check-extern http://localhost:8880/autotag-metadata --no-robots --ignore https://github.com/echemdb/autotag-metadata/blob/main/doc/genindex
       - uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
           branch: gh-pages
