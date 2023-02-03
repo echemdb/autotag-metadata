@@ -34,7 +34,7 @@ autotag_metadata = ["*.svg", "*.ico", "desktop-app.json"]
 "autotag_metadata.ui" = ["*.ui"]
 
 [tool.setuptools.packages.find]
-exclude = ["helpers"] 
+exclude = ["helpers"]
 
 [project.scripts]
 autotag_metadata = "desktop_app:entry_point"
