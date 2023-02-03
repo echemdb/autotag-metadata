@@ -13,9 +13,15 @@ jobs:
     name: Create Windows Installer
     needs: windows-executable-build
     uses: ./.github/workflows/create-windows-installer.yml
+  linux-executable-build:
+    name: Build Linux Executable
+    uses: ./.github/workflows/build-linux-exe.yml
+  macos-executable-build:
+    name: Build MacOS Executable
+    uses: ./.github/workflows/build-macos-exe.yml
 
   github-release:
-    needs: create-windows-installer
+    needs: [create-windows-installer, linux-executable-build, macos-executable-build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,9 +33,13 @@ jobs:
         run: |
           mv windows-installer/Installer.msi Autotag-Metadata-Installer-${{ github.ref_name }}.msi
           mv windows-exe/autotag-metadata.exe autotag-metadata-${{ github.ref_name }}.exe
+          mv linux-exe/autotag-metadata autotag-metadata-linux-${{ github.ref_name }}
+          mv macos-exe/autotag-metadata autotag-metadata-macos-${{ github.ref_name }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             autotag-metadata-${{ github.ref_name }}.exe
             Autotag-Metadata-Installer-${{ github.ref_name }}.msi
+            autotag-metadata-linux-${{ github.ref_name }}
+            autotag-metadata-macos-${{ github.ref_name }}

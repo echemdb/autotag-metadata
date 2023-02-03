@@ -9,17 +9,17 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with: { submodules: recursive }
-      - uses: conda-incubator/setup-miniconda@v2.1.1
-        with: { channels: "conda-forge", channel-priority: true }
+      - uses: conda-incubator/setup-miniconda@v2
+        with: { miniforge-variant: Mambaforge }
       - name: install dependencies
         shell: bash -l {0}
         run: |
-          conda env update --quiet -n test -f environment-dev.yml
-          conda list
+          mamba env update --quiet -n test -f environment-dev.yml
+          mamba list
       - name: build documentation
         shell: bash -l {0}
         run: |
