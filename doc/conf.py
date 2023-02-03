@@ -1,5 +1,6 @@
 project = 'autotag-metadata'
-copyright = '2022, the autotag-metadata authors'
+copyright = '2021-2023, the autotag-metadata authors'
+
 author = 'the autotag-metadata authors'
 
 release = '0.'

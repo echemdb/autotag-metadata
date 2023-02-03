@@ -52,12 +52,6 @@
           WorkingDirectory="INSTALLFOLDER"
           Directory="AutotagMetadataProgramsFolder"
           Icon="autotag_metadata.ico"/>
-        <Shortcut Id="UninstallAutotagMetadata"
-          Name="Uninstall $(var.Name)"
-          Description="Uninstalls $(var.Name)"
-          Target="[System64Folder]msiexec.exe"
-          Directory="AutotagMetadataProgramsFolder"
-          Arguments="/x [ProductCode]" />
         <RemoveFolder Id="AutotagMetadataProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU"
           Key="Software\Microsoft\$(var.Manufacturer)\$(var.Name)"

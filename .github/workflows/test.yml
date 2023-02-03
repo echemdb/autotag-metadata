@@ -18,7 +18,13 @@ jobs:
     name: Create Windows Installer
     needs: test-windows-executable-build
     uses: ./.github/workflows/create-windows-installer.yml
-  
+  test-linux-executable-build:
+    name: Build Linux Executable
+    uses: ./.github/workflows/build-linux-exe.yml
+  test-macos-executable-build:
+    name: Build MacOS Executable
+    uses: ./.github/workflows/build-macos-exe.yml
+
   test-conda:
     runs-on: ${{ matrix.os }}
     strategy:

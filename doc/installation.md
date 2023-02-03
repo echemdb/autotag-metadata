@@ -7,7 +7,7 @@ The latest installer and/or executable can be found in the [release section](htt
 Launch the program from the start menu.
 
 ```{note}
-Multiple instances of the program can be launched to observe different folders.
+Multiple instances of the program can be launched to watch different folders for file creations.
 ```
 
 ## From a Terminal
