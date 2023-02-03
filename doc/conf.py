@@ -24,7 +24,7 @@ html_static_path = []
 # Add Edit on GitHub links
 html_context = {
     'display_github': True,
-    'github_user': 'autotag-metadata',
+    'github_user': 'echemdb',
     'github_repo': 'autotag-metadata',
     'github_version': 'main/doc/',
 }
