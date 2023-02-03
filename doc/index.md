@@ -16,7 +16,7 @@ Welcome to autotag-metadata's documentation!
 ===================================
 
 Autotag-metadata allows automatic creation of metadata files upon file creation. The input metadata file can be added in a simple GUI or from template YAML files.
-The program was originally developed to create metadata files for experimental data acquired in a laboratory. However, it can in principle be used in any process where files are generated in the file system.
+The program was originally developed to create metadata files for experimental data acquired in a laboratory. However, it can be used in any process where files are generated in the file system and the attachment of additional metadata is desired.
 
 Input and output metadata files are currently in YAML, which can easily be converted in any other kinds of formats such as JSON, XML, ...
 
@@ -27,7 +27,7 @@ Example
 
 Assume a study in which the degradation of a fruit is followed at different temperatures, i.e., the change in color of a banana. For the first temperature the program returns a `banana.csv` and or the second a `banana2.csv`. These files contain a limited amount of information, such as a time `t` and intensity `I` axis.
 
-All other information on the experimentalist, the banana, and other starting parameters would have to be stored elsewhere (sheet of paper or electronic lab notebook). In combination with autotag-metadata first pre-define some information such aS:
+All other information on the experimentalist, the banana, and other starting parameters would have to be stored elsewhere (sheet of paper or electronic lab notebook). In combination with autotag-metadata first pre-define some information such as:
 
 ```yaml
 experimentalist: Max Mustermann
@@ -53,7 +53,7 @@ When autotag-metadata is active when `banana.csv` is generated, a new file `bana
 An elaborate metadata file for an electrochemistry experiment can be found [echemdbs' metadata schema](https://github.com/echemdb/metadata-schema/blob/main/examples/file_schemas/autotag.yaml) repository.
 
 ```{note}
-Multiple instances of the program can be launched to observe different folders.
+Multiple instances of the program can be launched to watch different folders for file creations.
 ```
 
 Refer to the [usage](usage.md) section for more details on the GUI.

@@ -26,9 +26,9 @@ Detailed installation instructions can be found in our [documentation](https://e
 
 The latest installer and/or executable can be found in the [release section](https://github.com/echemdb/autotag-metadata/releases).
 
-Launch the program from th start menu.
+Launch the program from the start menu.
 
-Multiple instances of the program can be launched to observe different folders.
+Multiple instances of the program can be launched to watch different folders for file creations.
 
 ## Terminal
 
@@ -58,4 +58,4 @@ desktop-app install autotag_metadata
 python -m autotag_metadata
 ```
 
-Multiple instances of the program can be launched to observe different folders.
+Multiple instances of the program can be launched to watch different folders for file creations.
