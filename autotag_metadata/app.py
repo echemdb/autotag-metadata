@@ -274,7 +274,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                 self.btnActivate.setText("Deactivate")
                 self.file_monitor.observer.schedule(
                     self.file_monitor.event_handler,
-                    self.watch_directory, 
+                    self.watch_directory,
                     recursive=False
                 ) # permission problems with subfolders
                 self.file_monitor.observer.start()
@@ -291,14 +291,14 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def file_created(self, msg):
         """Create the metadata file with timestamp and hash"""
-        if not msg.endswith(".metadata"): # metadata files
+        if not msg.endswith(".meta.yaml"): # metadata files
             logger.info("created %s", msg)
             self.parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             self.parameters["measurement file name"] = os.path.split(msg)[-1]
 
             hash_str = self.hash_file(msg)
             self.parameters["measurement file sha512"] = hash_str
-            
+
             self.write_metadata(msg)
 
     def hash_file(self, filename):
@@ -313,7 +313,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                     sha512_hash.update(byte_block)
             return sha512_hash.hexdigest()
         # while file is created it is locked or doesnot exist yet??
-        except (PermissionError, FileNotFoundError) as err: 
+        except (PermissionError, FileNotFoundError) as err:
             time.sleep(1)
             return self.hash_file(filename)
 
@@ -388,7 +388,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def write_metadata(self, file):
         """Write out metadata in file with file name corresponding to measurement file"""
-        with open(file + ".metadata", "w", encoding="utf-8") as metadata_file:
+        with open(file + ".meta.yaml", "w", encoding="utf-8") as metadata_file:
             yaml.dump(self.parameters, metadata_file, sort_keys=False)
         logger.info("wrote metadata for %s", metadata_file)
 
