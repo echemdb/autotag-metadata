@@ -65,4 +65,4 @@ Starting autotag-metadata
 python -m autotag_metadata
 ```
 
-To verify changes made to the documentation refer to the [readme](https://github.com/echemdb/autotag-metadata/tree/main/doc/readme.md) in the repository.
+To verify changes made to the documentation refer to the [readme](https://github.com/echemdb/autotag-metadata/tree/main/doc/README.md) in the repository.
