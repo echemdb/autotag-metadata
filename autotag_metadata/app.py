@@ -320,9 +320,9 @@ class AutotagApp(QtWidgets.QMainWindow):
     def populate_yamltextfield(self):
         """Change the text of the raw yaml field when field text is changed in the mask"""
         # blocking of signals necessary to prevent regeneration of mask
-        # which leads to a loose of focus of the currently edited mask field
+        # which leads to a loss of focus of the currently edited mask field
         self.yamlText.blockSignals(True)
-        self.yamlText.setPlainText(yaml.dump(self.parameters,sort_keys=False))
+        self.yamlText.setPlainText(yaml.dump(self.parameters,sort_keys=False, allow_unicode=True))
         self.yamlText.blockSignals(False)
 
     def recursively_something(self, parameters, parent=""):
@@ -389,7 +389,7 @@ class AutotagApp(QtWidgets.QMainWindow):
     def write_metadata(self, file):
         """Write out metadata in file with file name corresponding to measurement file"""
         with open(file + ".meta.yaml", "w", encoding="utf-8") as metadata_file:
-            yaml.dump(self.parameters, metadata_file, sort_keys=False)
+            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
         logger.info("wrote metadata for %s", metadata_file)
 
     def get_data(self, model, text_objectname):
