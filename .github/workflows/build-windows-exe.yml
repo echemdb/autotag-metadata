@@ -6,15 +6,22 @@ on:
 jobs:
   build:
     name: Build autotag-metadata.exe
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Package Application
-      uses: bkVBC/pyinstaller-action-windows@main
+    - name: Setup Conda Environment
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        path: .
-        spec: autotag-metadata.spec
+        python-version: "${{ matrix.python }}"
+        miniforge-variant: Mambaforge
+    - name: Install PyInstaller
+      shell: bash -l {0}
+      run: |
+        mamba env update --quiet -f environment-dev.yml -n build 
+        mamba list
+        mamba install -c conda-forge pyinstaller
+        pyinstaller --clean -y --dist ./dist/windows --workpath tmp autotag-metadata.spec
     - name: Upload Artifact   
       uses: actions/upload-artifact@v3
       with:
