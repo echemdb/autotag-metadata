@@ -119,6 +119,10 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.load_settings(settings_file)
         except FileNotFoundError:
             self.settings = {}
+        self.btnSelectTemporaryFile.clicked.connect(self.select_temporary_file)
+        self.btnUseTemporaryFile.clicked.connect(self.toggle_watch_temporary_file)
+        self.btnUseTemporaryFile.setDisabled(True)
+        self.ledTemporaryLoc.textChanged.connect(self.enable_use)
         # It sets up layout and widgets that are defined
         self.btnBrowse.clicked.connect(self.browse_folder)  # When the button is pressed
         # Execute browse_folder function
@@ -184,6 +188,8 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.parameters = yaml.load(self.yamlText.toPlainText(), Loader=yaml.FullLoader)
             if isinstance(self.parameters, dict):
                 self.populate_mask()
+                if self.btnUseTemporaryFile.isChecked():
+                    self.hidden_write_temporary_file()
 
     # def __handleTextChanged(self, text):
     #     #print("fired handled text")
@@ -240,6 +246,74 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
         self.template_dialog.exec_()
+
+    def select_temporary_file(self):
+        """Open the dialog for selecting the temporary to be watched"""
+        # self.ledFolder.clear()  # In case there are any existing elements in the list
+
+        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self,
+                                                               "pushButton", os.getenv("HOME"), "*.yaml" )
+
+        if temporary_file:  # if user didn't pick a directory don't continue
+            self.ledTemporaryLoc.setText(temporary_file)
+            self.temporary_file = temporary_file
+            self.write_temporary_file()
+            logger.info("changed temporary file to %s", temporary_file)
+    
+    def toggle_watch_temporary_file(self):
+        """Toggle temporary file watching"""
+        if self.btnUseTemporaryFile.isChecked():
+            if self.temporary_file:
+                # create new instance of watcher potential
+                splitted = self.temporary_file.split("/")
+                path = "/".join(splitted[:-1])
+                file = splitted[-1]
+                self.temporary_file_monitor = FileMonitor(patterns=[file])
+                self.thread_temporary_file = QtCore.QThread(self)
+                self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
+                self.temporary_file_monitor.moveToThread(self.thread_temporary_file)
+
+                self.btnUseTemporaryFile.setText("Do not use")
+                self.temporary_file_monitor.observer.schedule(
+                    self.temporary_file_monitor.event_handler,
+                    path,
+                    recursive=False
+                ) # permission problems with subfolders
+                self.temporary_file_monitor.observer.start()
+                logger.info("watching %s", self.temporary_file)
+            else:
+                self.btnUseTemporaryFile.setChecked(False)
+
+
+        elif not self.btnUseTemporaryFile.isChecked():
+            self.btnUseTemporaryFile.setText("Use")
+            self.temporary_file_monitor.observer.stop()
+
+            logger.info("stop watching %s", self.temporary_file)
+
+    def temporary_file_changed(self):
+        with open(self.temporary_file) as f:
+            self.parameters = yaml.load(f.read(), Loader=yaml.FullLoader)
+        self.populate_yamltextfield()
+        self.populate_mask()
+
+    def write_temporary_file(self):
+        with open(self.temporary_file, "w", encoding="utf-8") as metadata_file:
+            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
+
+
+    def hidden_write_temporary_file(self):
+        # prevent unintended reload
+        self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
+        self.write_temporary_file()
+        self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
+    
+    def enable_use(self):
+        """Enable use button"""
+        if os.path.exists(self.ledTemporaryLoc.text()):
+            self.btnUseTemporaryFile.setEnabled(True)
+        else:
+            self.btnUseTemporaryFile.setDisabled(True)
 
     def browse_folder(self):
         """Open the dialog for selecting the folder to be watched"""
