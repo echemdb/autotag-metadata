@@ -7,8 +7,8 @@ jobs:
   create-installer:
     runs-on: windows-latest
     env:
-      CANDLE: "C:/Program Files (x86)/WiX Toolset v3.11/bin/candle.exe"
-      LIGHT: "C:/Program Files (x86)/WiX Toolset v3.11/bin/light.exe"
+      CANDLE: "C:/Program Files (x86)/WiX Toolset v3.14/bin/candle.exe"
+      LIGHT: "C:/Program Files (x86)/WiX Toolset v3.14/bin/light.exe"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
