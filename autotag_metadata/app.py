@@ -40,6 +40,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from autotag_metadata.file_handling import FileMonitor, MyEventHandler
 from autotag_metadata.ui.template_dialog import TemplateDialog
 from autotag_metadata.ui.qplaintexteditlogger import QPlainTextEditLogger
+from autotag_metadata.ui.templatetree import TemplateTree
 
 if sys.platform == "win32":
     appdata_folder = os.path.join(os.getenv("APPDATA"), "autotag_metadata")
@@ -136,6 +137,10 @@ class AutotagApp(QtWidgets.QMainWindow):
         logging.getLogger().setLevel(logging.INFO)
         logger.info("template file in %s", templates_file)
 
+        self.template_tree = TemplateTree({})
+        self.template_tree.model.dataChanged.connect(self.on_tree_data_change)
+        self.scrollArea.setWidget(self.template_tree)
+
         for widget in self.findChildren((QtWidgets.QLineEdit,QtWidgets.QComboBox)):
        #     print(widget.objectName())
        #     if isinstance(widget, QtWidgets.QComboBox ):
@@ -165,6 +170,11 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.btnActivate.setDisabled(True)
         self.yamlText.textChanged.connect(self.act_on_yaml_change)
         self.parameters = {}
+
+    @QtCore.pyqtSlot()
+    def on_tree_data_change(self):
+        self.parameters = self.template_tree.to_dict()
+        self.populate_yamltextfield()
 
     def validate_yaml(self):
         """Change color of raw yaml text field according to validation"""
@@ -371,20 +381,8 @@ class AutotagApp(QtWidgets.QMainWindow):
             deep_dict[listofkeys[0]] = text
 
     def populate_mask(self):
-        """Generate input from parameters dict"""
-        while self.verticalLayout_2.count():
-            child = self.verticalLayout_2.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-        self.recursively_something(self.parameters)
-        spacerItem = QtWidgets.QSpacerItem(
-            20,
-            40,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Expanding
-        )
-        self.verticalLayout_2.addItem(spacerItem)
+        """Generate input tree from parameters dict"""
+        self.template_tree.import_from_dict(self.parameters)
 
     def write_metadata(self, file):
         """Write out metadata in file with file name corresponding to measurement file"""
