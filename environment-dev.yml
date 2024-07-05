@@ -26,7 +26,7 @@ dependencies:
   - pytest>=6.2,<7
   - pyyaml>=6,<7
   - sphinx>=7,<8
-  - sphinx_rtd_theme>=1,<2
+  - sphinx_rtd_theme>=2,<3
   - toml>0.10
   - types-pyyaml>=6.0.0,<6.1.0
   - types-toml>=0.10.0,<0.11.0
