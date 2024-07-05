@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Package Application
       uses: bkVBC/pyinstaller-action-windows@main
       with:
         path: .
         spec: autotag-metadata.spec
     - name: Upload Artifact   
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-exe
         path: dist/windows

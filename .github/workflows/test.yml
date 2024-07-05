@@ -29,21 +29,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python: ["3.9", "3.10"]
+        python: ["3.9", "3.10", "3.11", "3.12"]
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         source: ["conda", "pip"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Conda Environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "${{ matrix.python }}"
           miniforge-variant: Mambaforge
       - name: Install Dependencies
         shell: bash -l {0}
         run: |
-          mamba env update --quiet -n test -f environment-dev.yml
+          mamba env update --quiet -n test -f environment.yml
           mamba list
         if: ${{ matrix.source == 'conda' }}
       - name: Install Autotag-Metadata (conda)
