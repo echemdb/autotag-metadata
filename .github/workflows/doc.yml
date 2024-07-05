@@ -11,9 +11,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with: { submodules: recursive }
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with: { miniforge-variant: Mambaforge }
       - name: install dependencies
         shell: bash -l {0}
@@ -34,7 +34,7 @@ jobs:
       #   run: |
       #     # Strangely, the linkchecker modules are installed writable and linkchecker then refuses to load them.
       #     chmod -R a-w `python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
-      - uses: JamesIves/github-pages-deploy-action@v4.3.3
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: doc/generated/html/autotag_metadata
