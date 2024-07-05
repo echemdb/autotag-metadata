@@ -25,10 +25,11 @@ from PyQt5 import QtCore
 
 class QPlainTextEditLogger(logging.Handler, QtCore.QThread):
     """PlainTextLogger"""
+
     def __init__(self, _parent, loggingwindow):
         super().__init__()
-        #self.setLevel('INFO')
-        #self.setLevel('DEBUG')
+        # self.setLevel('INFO')
+        # self.setLevel('DEBUG')
         self.widget = loggingwindow
         self.widget.setReadOnly(True)
 
@@ -36,12 +37,12 @@ class QPlainTextEditLogger(logging.Handler, QtCore.QThread):
         msg = self.format(record)
         self.widget.appendPlainText(msg)
 
-        #optinal reverse logging
-        #cursor = self.widget.textCursor()
-        #cursor.movePosition(QtGui.QTextCursor.Start, QtGui.QTextCursor.MoveAnchor)
-        #self.widget.setTextCursor(cursor)
-        #self.widget.setCursor()
-        #self.widget.textCursor().insertText(msg + '\n')
+        # optinal reverse logging
+        # cursor = self.widget.textCursor()
+        # cursor.movePosition(QtGui.QTextCursor.Start, QtGui.QTextCursor.MoveAnchor)
+        # self.widget.setTextCursor(cursor)
+        # self.widget.setCursor()
+        # self.widget.textCursor().insertText(msg + '\n')
 
     def write(self, msg):
         pass

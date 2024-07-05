@@ -22,8 +22,8 @@
 
 import os
 import sys
-import yaml
 
+import yaml
 from PyQt5 import QtWidgets, uic
 
 if sys.platform == "win32":
@@ -39,15 +39,16 @@ dir_path = os.path.dirname(path)
 
 class TemplateDialog(QtWidgets.QDialog):
     """The template dialog window"""
+
     def __init__(self):
         super(TemplateDialog, self).__init__()
         uic.loadUi(f"{dir_path}/template_dialog.ui", self)
 
         self.buttonBox.accepted.connect(self.accept)
-        #self.close.connect(self.clear_dialog)
+        # self.close.connect(self.clear_dialog)
         self.buttonBox.rejected.connect(self.reject)
         self.listWidget.selectionModel().selectionChanged.connect(self.updatelineedit)
-        self.toolTip(   )
+        self.toolTip()
 
     # def closeEvent(self, event):
     #     pass
@@ -62,12 +63,15 @@ class TemplateDialog(QtWidgets.QDialog):
         """Read or write templates"""
         super().accept()
 
-        if self.windowTitle() == 'Load Template' and self.listWidget.currentItem() is not None:
+        if (
+            self.windowTitle() == "Load Template"
+            and self.listWidget.currentItem() is not None
+        ):
             self.parameters = self.templates[self.listWidget.currentItem().text()]
-        elif self.windowTitle() == 'Store Template' and self.lineEdit.text() != '':
+        elif self.windowTitle() == "Store Template" and self.lineEdit.text() != "":
             self.templates[self.lineEdit.text()] = self.parameters
 
-            with open(templates_file, 'w', encoding="utf-8") as file:
+            with open(templates_file, "w", encoding="utf-8") as file:
                 yaml.dump(self.templates, file, sort_keys=False)
 
     def updatelineedit(self):
