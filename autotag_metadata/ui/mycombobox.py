@@ -21,16 +21,17 @@ UI elements for Autotag Metadata
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtCore, QtWidgets
 
 
 class MyComboBox(QtWidgets.QComboBox):
     """
     ComboBox
     """
-    #textModified = QtCore.pyqtSignal(str, str) # (before, after)
 
-    def __init__(self, contents='', parent=None):
+    # textModified = QtCore.pyqtSignal(str, str) # (before, after)
+
+    def __init__(self, contents="", parent=None):
         super(MyComboBox, self).__init__(contents)
         self.setEditable(True)
         self.lineEdit().textModified = QtCore.pyqtSignal(str, str)
@@ -47,4 +48,6 @@ class MyComboBox(QtWidgets.QComboBox):
         if before != after:
             self._before = after
             self.lineEdit().textModified.emit(before, after)
-#main_design.QtWidgets.QComboBox = MyComboBox
+
+
+# main_design.QtWidgets.QComboBox = MyComboBox

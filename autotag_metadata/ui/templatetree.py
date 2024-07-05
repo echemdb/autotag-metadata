@@ -1,6 +1,7 @@
 """
 Treeview of the teaplate dictionary
 """
+
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -20,9 +21,10 @@ Treeview of the teaplate dictionary
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QTreeView,  QWidget, QVBoxLayout
 from collections import deque
+
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
 
 class TemplateTree(QWidget):
@@ -49,19 +51,21 @@ class TemplateTree(QWidget):
         while values:
             value = values.popleft()
 
-            if value['parent_id'] == 0:
+            if value["parent_id"] == 0:
                 parent = root
             else:
-                if value['parent_id'] not in available_parents:
+                if value["parent_id"] not in available_parents:
                     values.append(value)
                     continue
-                parent = available_parents[value['parent_id']]
-            id = value['id']
-            parent.appendRow([
-                QStandardItem(str(value['key'])),
-                QStandardItem(str(value['val'])),
-                QStandardItem(str(value['type']))
-            ])
+                parent = available_parents[value["parent_id"]]
+            id = value["id"]
+            parent.appendRow(
+                [
+                    QStandardItem(str(value["key"])),
+                    QStandardItem(str(value["val"])),
+                    QStandardItem(str(value["type"])),
+                ]
+            )
             available_parents[id] = parent.child(parent.rowCount() - 1)
         self.tree.expandAll()
 
@@ -70,18 +74,41 @@ class TemplateTree(QWidget):
         if parent_id is None:
             parent_id = 0
 
-        id = parent_id +1
+        id = parent_id + 1
 
         for key, val in dictionary.items():
-            
             if isinstance(val, dict):
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": "", "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": "",
+                        "type": str(type(val)),
+                    }
+                )
                 items.extend(self.dict_to_model(val, id))
             elif type(val) in (list, set, tuple):
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": "", "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": "",
+                        "type": str(type(val)),
+                    }
+                )
                 items.extend(self.list_to_model(val, id))
             else:
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": val, "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": val,
+                        "type": str(type(val)),
+                    }
+                )
             id += 1
         return items
 
@@ -90,18 +117,41 @@ class TemplateTree(QWidget):
         if parent_id is None:
             parent_id = 0
 
-        id = parent_id +1
+        id = parent_id + 1
 
         for key, val in enumerate(dict_list):
-            
             if isinstance(val, dict):
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": "", "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": "",
+                        "type": str(type(val)),
+                    }
+                )
                 items.extend(self.dict_to_model(val, id))
             elif type(val) in (list, set, tuple):
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": "", "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": "",
+                        "type": str(type(val)),
+                    }
+                )
                 items.extend(self.list_to_model(val, id))
             else:
-                items.append({"parent_id": parent_id, "id": id, "key": key, "val": val, "type": str(type(val))} )
+                items.append(
+                    {
+                        "parent_id": parent_id,
+                        "id": id,
+                        "key": key,
+                        "val": val,
+                        "type": str(type(val)),
+                    }
+                )
             id += 1
         return items
 
@@ -111,8 +161,8 @@ class TemplateTree(QWidget):
     def recurse_items(self, item, item_type=None):
         if item is not None:
             if item.hasChildren():
-                d = {}
-                l = []
+                temp_dict = {}
+                temp_list = []
                 for i in range(item.rowCount()):
                     if isinstance(item, QStandardItemModel):
                         item_type = str(type(dict()))
@@ -125,24 +175,22 @@ class TemplateTree(QWidget):
                         child_item_type = item.child(i, 2)
 
                     if child_item_type.text() == str(type(int())):
-                        d[child_key.text()] = int(child_val.text())
-                        l.append(int(child_val.text()))
+                        temp_dict[child_key.text()] = int(child_val.text())
+                        temp_list.append(int(child_val.text()))
                     elif child_item_type.text() == str(type(float())):
-                        d[child_key.text()] = int(child_val.text())
-                        l.append(int(child_val.text()))
+                        temp_dict[child_key.text()] = int(child_val.text())
+                        temp_list.append(int(child_val.text()))
                     elif child_item_type.text() == str(type(str())):
-                        d[child_key.text()] = child_val.text()
-                        l.append(child_val.text())
+                        temp_dict[child_key.text()] = child_val.text()
+                        temp_list.append(child_val.text())
                     else:
-                        child = self.recurse_items(child_key, item_type=child_item_type.text())
-                        d[child_key.text()] = child
-                        l.append(child)
+                        child = self.recurse_items(
+                            child_key, item_type=child_item_type.text()
+                        )
+                        temp_dict[child_key.text()] = child
+                        temp_list.append(child)
 
                 if item_type == str(type(dict())):
-                    return d
+                    return temp_dict
                 elif item_type == str(type(list())):
-                    return l
-
-
-
-
+                    return temp_list

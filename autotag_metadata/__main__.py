@@ -15,17 +15,20 @@
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with autotag-metadata. If not, see 
+#  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
 import desktop_app
+
 from autotag_metadata import app
 
 desktop_app.set_process_appid("autotag_metadata")
 
+
 def main():
     app.run()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
