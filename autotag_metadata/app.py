@@ -278,8 +278,8 @@ class AutotagApp(QtWidgets.QMainWindow):
         if self.btnUseTemporaryFile.isChecked():
             if self.temporary_file:
                 # create new instance of watcher potential
-                splitted = self.temporary_file.split("/")
-                path = "/".join(splitted[:-1])
+                splitted = os.path.split(self.temporary_file)
+                path = os.path.join(*splitted[:-1])
                 file = splitted[-1]
                 self.temporary_file_monitor = FileMonitor(patterns=[file])
                 self.thread_temporary_file = QtCore.QThread(self)
