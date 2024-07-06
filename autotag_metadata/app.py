@@ -175,6 +175,9 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.yamlText.textChanged.connect(self.act_on_yaml_change)
         self.parameters = {}
 
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.reenable_temporary_file_watch)
+
     @QtCore.pyqtSlot()
     def on_tree_data_change(self):
         self.parameters = self.template_tree.to_dict()
@@ -319,9 +322,14 @@ class AutotagApp(QtWidgets.QMainWindow):
         # prevent unintended reload
         self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
         self.write_temporary_file()
+        self.timer.start(1000)
+
+    @QtCore.pyqtSlot()
+    def reenable_temporary_file_watch(self):
         self.temporary_file_monitor.getEmitter().modify_signal.connect(
             self.temporary_file_changed
         )
+        self.timer.stop()
 
     def enable_use(self):
         """Enable use button"""
