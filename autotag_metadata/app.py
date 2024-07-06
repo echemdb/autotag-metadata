@@ -180,8 +180,15 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_tree_data_change(self):
-        self.parameters = self.template_tree.to_dict()
-        self.populate_yamltextfield()
+        mask_dict = self.template_tree.to_dict()
+        if mask_dict:
+            self.parameters = mask_dict
+            self.populate_yamltextfield()
+        else:
+            self.populate_mask()
+            logger.error(
+                "Value types can not be changed in the mask. Please use the text field or editor."
+            )
 
     def validate_yaml(self):
         """Change color of raw yaml text field according to validation"""

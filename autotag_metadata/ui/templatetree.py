@@ -173,22 +173,24 @@ class TemplateTree(QWidget):
                         child_key = item.child(i, 0)
                         child_val = item.child(i, 1)
                         child_item_type = item.child(i, 2)
-
-                    if child_item_type.text() == str(type(int())):
-                        temp_dict[child_key.text()] = int(child_val.text())
-                        temp_list.append(int(child_val.text()))
-                    elif child_item_type.text() == str(type(float())):
-                        temp_dict[child_key.text()] = int(child_val.text())
-                        temp_list.append(int(child_val.text()))
-                    elif child_item_type.text() == str(type(str())):
-                        temp_dict[child_key.text()] = child_val.text()
-                        temp_list.append(child_val.text())
-                    else:
-                        child = self.recurse_items(
-                            child_key, item_type=child_item_type.text()
-                        )
-                        temp_dict[child_key.text()] = child
-                        temp_list.append(child)
+                    try:
+                        if child_item_type.text() == str(type(int())):
+                            temp_dict[child_key.text()] = int(child_val.text())
+                            temp_list.append(int(child_val.text()))
+                        elif child_item_type.text() == str(type(float())):
+                            temp_dict[child_key.text()] = int(child_val.text())
+                            temp_list.append(int(child_val.text()))
+                        elif child_item_type.text() == str(type(str())):
+                            temp_dict[child_key.text()] = child_val.text()
+                            temp_list.append(child_val.text())
+                        else:
+                            child = self.recurse_items(
+                                child_key, item_type=child_item_type.text()
+                            )
+                            temp_dict[child_key.text()] = child
+                            temp_list.append(child)
+                    except ValueError:
+                        return None
 
                 if item_type == str(type(dict())):
                     return temp_dict
