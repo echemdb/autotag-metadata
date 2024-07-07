@@ -337,8 +337,11 @@ class AutotagApp(QtWidgets.QMainWindow):
     def toggle_watch(self):
         """Toggle folder watching"""
         if self.btnActivate.isChecked():
-            self.ledFilePattern.setDisabled(True)
+            
             if self.watch_directory:
+                self.ledFolder.setDisabled(True)
+                self.ledFilePattern.setDisabled(True)
+                self.cbRecursiveWatch.setDisabled(True)
                 # create new instance of watcher potential
                 if self.ledFilePattern.text() == "":
                     patterns = None
@@ -355,7 +358,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                 self.file_monitor.observer.schedule(
                     self.file_monitor.event_handler,
                     self.watch_directory,
-                    recursive=False,
+                    recursive=self.cbRecursiveWatch.isChecked(),
                 )  # permission problems with subfolders
                 self.file_monitor.observer.start()
                 logger.info("watching %s", self.watch_directory)
@@ -365,7 +368,9 @@ class AutotagApp(QtWidgets.QMainWindow):
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
             self.file_monitor.observer.stop()
+            self.ledFolder.setEnabled(True)
             self.ledFilePattern.setEnabled(True)
+            self.cbRecursiveWatch.setEnabled(True)
             logger.info("stop watching %s", self.watch_directory)
 
     def file_created(self, msg):
