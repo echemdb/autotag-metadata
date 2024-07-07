@@ -6,27 +6,23 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - astropy>=5,<6
-  - click>=8,<9
-  - datapackage>=1.15,<2
-  - desktop-app>=0.3
-  - dill>=0.3.4,<0.4
+  - desktop-app
+  - dill
   - jupytext
-  - mypy>0.93
+  - mypy
   - myst-nb
   - myst-parser
-  - pandas>=2,<3
-  - pint>=0.18,<1
-  - pip>=22,<23
-  - pyinstaller>=5.7.0
-  - pyqt>=5.15,<6
-  - pytest>=6.2,<7
-  - pyyaml>=6,<7
+  - pip>=24
+  - pyinstaller>=6.7.0
+  - pytest
+  - pyyaml
   - ruff
   - sphinx
   - sphinx_rtd_theme
-  - toml>0.10
-  - types-pyyaml>=6.0.0,<6.1.0
-  - types-toml>=0.10.0,<0.11.0
-  - watchdog>=2.1,<2.2
-  - yamllint>=1.26,<2
+  - toml
+  - types-pyyaml
+  - types-toml
+  - watchdog
+  - yamllint
+  - pip:
+    - pyqt6

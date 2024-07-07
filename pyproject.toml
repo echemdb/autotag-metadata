@@ -14,9 +14,8 @@ readme      = "README.md"
 requires-python = ">=3.8.0"
 dependencies    = [
     "desktop-app",
-    "pyqt5",
+    "pyqt6",
     "watchdog",
-    "pint",
     "yamllint",
     "toml",
 ]
