@@ -38,7 +38,7 @@ class TemplateTree(QWidget):
         self.model.setHorizontalHeaderLabels(["Key", "Value", "Type"])
 
         self.tree.setModel(self.model)
-        self.tree.hideColumn(2)
+        # self.tree.hideColumn(2)
         self.import_from_dict(data)
 
     def import_from_dict(self, data, root=None):
@@ -178,11 +178,21 @@ class TemplateTree(QWidget):
                             temp_dict[child_key.text()] = int(child_val.text())
                             temp_list.append(int(child_val.text()))
                         elif child_item_type.text() == str(type(float())):
-                            temp_dict[child_key.text()] = int(child_val.text())
-                            temp_list.append(int(child_val.text()))
+                            temp_dict[child_key.text()] = float(child_val.text())
+                            temp_list.append(float(child_val.text()))
                         elif child_item_type.text() == str(type(str())):
-                            temp_dict[child_key.text()] = child_val.text()
-                            temp_list.append(child_val.text())
+                            try:  # break when number is input in str field
+                                if child_key.text() not in [
+                                    "crystallographicOrientation"
+                                ]:
+                                    float(child_val.text())
+                                    return None
+                                else:
+                                    temp_dict[child_key.text()] = child_val.text()
+                                    temp_list.append(child_val.text())
+                            except ValueError:
+                                temp_dict[child_key.text()] = child_val.text()
+                                temp_list.append(child_val.text())
                         else:
                             child = self.recurse_items(
                                 child_key, item_type=child_item_type.text()
