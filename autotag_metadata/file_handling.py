@@ -27,7 +27,7 @@ class MyEventHandler(PatternMatchingEventHandler, QtCore.QThread):
     create_signal = QtCore.pyqtSignal(str)
     modify_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, patterns):
+    def __init__(self, patterns=None):
         super(MyEventHandler, self).__init__(patterns=patterns)
         # self.filename = filename
         # self.signalName = str(filename) + "_modified"
