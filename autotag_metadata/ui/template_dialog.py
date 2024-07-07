@@ -23,7 +23,7 @@
 import os
 from enum import Enum
 
-from PyQt5 import QtWidgets, uic
+from PyQt6 import QtWidgets, uic
 
 
 path = os.path.abspath(__file__)
