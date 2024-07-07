@@ -27,25 +27,15 @@ import os
 import sys
 import time
 
-import toml
 import yaml
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from yamllint import linter
 
-from autotag_metadata.file_handling import FileMonitor
-from autotag_metadata.ui.qplaintexteditlogger import QPlainTextEditLogger
-from autotag_metadata.ui.template_dialog import TemplateDialog
-from autotag_metadata.ui.templatetree import TemplateTree
-
-if sys.platform == "win32":
-    appdata_folder = os.path.join(os.getenv("APPDATA"), "autotag_metadata")
-elif sys.platform == "linux":
-    appdata_folder = os.path.join(os.getenv("HOME"), ".config", "autotag_metadata")
-
-if not os.path.exists(appdata_folder):
-    os.mkdir(appdata_folder)
-elif not os.path.isdir(appdata_folder):
-    raise FileExistsError("Config path is not a folder.")
+from .config import Config
+from .file_handling import FileMonitor
+from .ui.logger import LogHandler
+from .ui.template_dialog import TemplateDialog, TemplateDialogType
+from .ui.templatetree import TemplateTree
 
 yaml_config_str = """---
 
@@ -82,9 +72,6 @@ rules:
     level: warning"""
 
 
-settings_file = os.path.join(appdata_folder, "settings.toml")
-templates_file = os.path.join(appdata_folder, "templates.yaml")
-
 logger = logging.getLogger(__name__)
 # logger.setLevel("INFO")
 
@@ -99,8 +86,6 @@ class AutotagApp(QtWidgets.QMainWindow):
         super(AutotagApp, self).__init__(*args, **kwargs)
         uic.loadUi(f"{dir_path}/ui/main_window.ui", self)
 
-        # replace standard QLineEdit with custom one which fires signals
-        # QtWidgets.QLineEdit = MyLineEdit
         # set window title and icon
         title = "Autotag Metadata"
         self.setWindowTitle(title)
@@ -114,10 +99,9 @@ class AutotagApp(QtWidgets.QMainWindow):
         )
         self.setWindowIcon(icon)
 
-        try:
-            self.load_settings(settings_file)
-        except FileNotFoundError:
-            self.settings = {}
+        self.setup_logger()
+        self.config = Config()
+
         self.btnSelectTemporaryFile.clicked.connect(self.select_temporary_file)
         self.btnUseTemporaryFile.clicked.connect(self.toggle_watch_temporary_file)
         self.btnUseTemporaryFile.setDisabled(True)
@@ -129,47 +113,11 @@ class AutotagApp(QtWidgets.QMainWindow):
         # Template management
         self.btnStore.clicked.connect(self.store_template)
         self.btnLoad.clicked.connect(self.load_template)
-        self.template_dialog = TemplateDialog()
-
-        logTextBox = QPlainTextEditLogger(self, self.pteLogging)
-        # You can format what is printed to text box
-        logTextBox.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
-        logging.getLogger().addHandler(logTextBox)
-        # You can control the logging level
-        logging.getLogger().setLevel(logging.INFO)
-        logger.info("template file in %s", templates_file)
 
         self.template_tree = TemplateTree({})
         self.template_tree.model.dataChanged.connect(self.on_tree_data_change)
         self.scrollArea.setWidget(self.template_tree)
 
-        for widget in self.findChildren((QtWidgets.QLineEdit, QtWidgets.QComboBox)):
-            #     print(widget.objectName())
-            #     if isinstance(widget, QtWidgets.QComboBox ):
-            #         widget.__handleTextChanged = handleTextChanged
-            #        widget.__handleEditingFinished = handleEditingFinished
-            #        widget.lineEdit().editingFinished.connect(widget.__handleEditingFinished)
-            #       widget.lineEdit().textChanged.connect(widget.__handleTextChanged)
-            # self.settings.
-            # widget._before = contents
-
-            # QtWidgets.QComboBox.item
-            completer = QtWidgets.QCompleter()
-            widget.setCompleter(completer)
-            model = QtCore.QStringListModel()
-            completer.setModel(model)
-            self.get_data(model, widget.objectName())
-
-        # self.watch_directory = None
-
-        # self.file_monitor = FileMonitor()
-        # self.thread = QtCore.QThread(self)
-        # self.file_monitor.getEmitter().create_signal.connect(self.file_created)
-        # self.file_monitor.moveToThread(self.thread)
-        # self.thread.started.connect(self.file_monitor.getEmitter().create_signal)
-        # self.thread.start()
         self.ledFolder.textChanged.connect(self.enable_activate)
         self.btnActivate.setDisabled(True)
         self.yamlText.textChanged.connect(self.act_on_yaml_change)
@@ -228,46 +176,67 @@ class AutotagApp(QtWidgets.QMainWindow):
     def check_input(self):
         """Extended input checking of raw yaml input possibly schema"""
 
-    # @QtCore.pyqtSlot(str)
-    def load_template(self, filepath):
+    def load_template(self):
         """Open the dialog for loading templates"""
-        self.template_dialog.setWindowTitle("Load Template")
-        try:
-            with open(templates_file, encoding="utf-8") as file:
-                self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-        except FileNotFoundError:
-            self.template_dialog.templates = {}
+        template_dialog = TemplateDialog(TemplateDialogType.Load)
+        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
 
-        if not isinstance(self.template_dialog.templates, dict):
-            self.template_dialog.templates = {}
-
-        self.template_dialog.listWidget.clear()
-        self.template_dialog.lineEdit.clear()
-        self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-        if self.template_dialog.exec_() and hasattr(self.template_dialog, "parameters"):
-            self.parameters = self.template_dialog.parameters
-            self.populate_mask()
+        if template_dialog.exec():
+            yaml_text = self.config.load_template(template_dialog.template_name)
+            self.parameters = yaml.load(yaml_text, Loader=yaml.FullLoader)
             self.populate_yamltextfield()
+            self.populate_mask()
 
     # @QtCore.pyqtSlot(str)
-    def store_template(self, filepath):
+    # def load_template(self, filepath):
+    #     """Open the dialog for loading templates"""
+    #     self.template_dialog.setWindowTitle("Load Template")
+    #     try:
+    #         with open(templates_file, encoding="utf-8") as file:
+    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
+    #     except FileNotFoundError:
+    #         self.template_dialog.templates = {}
+
+    #     if not isinstance(self.template_dialog.templates, dict):
+    #         self.template_dialog.templates = {}
+
+    #     self.template_dialog.listWidget.clear()
+    #     self.template_dialog.lineEdit.clear()
+    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
+    #     if self.template_dialog.exec_() and hasattr(self.template_dialog, "parameters"):
+    #         self.parameters = self.template_dialog.parameters
+    #         self.populate_mask()
+    #         self.populate_yamltextfield()
+
+    # @QtCore.pyqtSlot(str)
+    # def store_template(self, filepath):
+    #     """Open the dialog for storing templates"""
+    #     self.template_dialog.setWindowTitle("Store Template")
+    #     try:
+    #         with open(templates_file, encoding="utf-8") as file:
+    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
+    #     except FileNotFoundError:
+    #         self.template_dialog.templates = {}
+
+    #     if not isinstance(self.template_dialog.templates, dict):
+    #         self.template_dialog.templates = {}
+
+    #     self.template_dialog.parameters = self.parameters
+    #     self.template_dialog.listWidget.clear()
+    #     self.template_dialog.lineEdit.clear()
+
+    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
+    #     self.template_dialog.exec_()
+
+    def store_template(self):
         """Open the dialog for storing templates"""
-        self.template_dialog.setWindowTitle("Store Template")
-        try:
-            with open(templates_file, encoding="utf-8") as file:
-                self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-        except FileNotFoundError:
-            self.template_dialog.templates = {}
+        template_dialog = TemplateDialog(TemplateDialogType.Store)
+        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
 
-        if not isinstance(self.template_dialog.templates, dict):
-            self.template_dialog.templates = {}
+        content = self.yamlText.toPlainText()
 
-        self.template_dialog.parameters = self.parameters
-        self.template_dialog.listWidget.clear()
-        self.template_dialog.lineEdit.clear()
-
-        self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-        self.template_dialog.exec_()
+        if template_dialog.exec():
+            self.config.save_template(template_dialog.template_name, content)
 
     def select_temporary_file(self):
         """Open the dialog for selecting the temporary to be watched"""
@@ -493,21 +462,22 @@ class AutotagApp(QtWidgets.QMainWindow):
             )
         logger.info("wrote metadata for %s", file + ".meta.yaml")
 
-    def get_data(self, model, text_objectname):
-        """TODO"""
-        try:
-            model.setStringList(self.settings[text_objectname])
-        except KeyError:
-            model.setStringList([])
+    def setup_logger(self):
+        self.log_handler = LogHandler(self)
+        self.log_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
+        logging.getLogger().addHandler(self.log_handler)
+        self.log_handler.new_record.connect(self.pteLogging.appendPlainText)
+        self.pteLogging.setReadOnly(True)
+        # logging level
+        logging.getLogger().setLevel(logging.INFO)
+        logger.info("Starting autotag-metadata")
 
-    def load_settings(self, file=settings_file):
-        """Load settings file"""
-        self.settings = toml.load(file)
-
-    def write_settings(self, file=settings_file):
-        """Write settings file"""
-        with open(file, "w", encoding="utf-8") as file:
-            toml.dump(self.settings, file)
+    def closeEvent(self, event):
+        self.config.save_settings()
+        super().closeEvent(event)
+        logging.getLogger().removeHandler(self.log_handler)
 
 
 def run():
