@@ -339,7 +339,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         if self.btnActivate.isChecked():
             if self.watch_directory:
                 self.ledFolder.setDisabled(True)
-                self.ledFilePattern.setDisabled(True)
+                self.ledFilePatterns.setDisabled(True)
                 self.cbRecursiveWatch.setDisabled(True)
                 # create new instance of watcher potential
                 if self.ledFilePatterns.text() == "":
