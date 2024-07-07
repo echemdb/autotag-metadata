@@ -296,7 +296,8 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def hidden_write_temporary_file(self):
         # prevent unintended reload
-        self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
+        if not self.timer.isActive():
+            self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
         self.write_temporary_file()
         self.timer.start(1000)
 
