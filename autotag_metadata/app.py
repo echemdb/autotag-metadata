@@ -144,10 +144,10 @@ class AutotagApp(QtWidgets.QMainWindow):
         # config.YamlLintConfig(content=yaml_config_str))
         yaml_error = linter.get_syntax_error(self.yamlText.toPlainText())
         if yaml_error is None:
-            self.yamlText.setStyleSheet("background-color: rgb(255, 255, 255);")
+            self.yamlText.setStyleSheet("background-color: rgb(144, 238, 144);")
             return True
         else:
-            self.yamlText.setStyleSheet("background-color: rgb(85, 85, 127);")
+            self.yamlText.setStyleSheet("background-color: rgb(255, 106, 106);")
             return False
 
     def act_on_yaml_change(self):
@@ -337,17 +337,16 @@ class AutotagApp(QtWidgets.QMainWindow):
     def toggle_watch(self):
         """Toggle folder watching"""
         if self.btnActivate.isChecked():
-            
             if self.watch_directory:
                 self.ledFolder.setDisabled(True)
                 self.ledFilePattern.setDisabled(True)
                 self.cbRecursiveWatch.setDisabled(True)
                 # create new instance of watcher potential
-                if self.ledFilePattern.text() == "":
+                if self.ledFilePatterns.text() == "":
                     patterns = None
                 else:
                     patterns = [
-                        p.strip() for p in self.ledFilePattern.text().split(",")
+                        p.strip() for p in self.ledFilePatterns.text().split(",")
                     ]
                 self.file_monitor = FileMonitor(patterns=patterns)
                 self.thread = QtCore.QThread(self)
@@ -369,7 +368,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.btnActivate.setText("Activate")
             self.file_monitor.observer.stop()
             self.ledFolder.setEnabled(True)
-            self.ledFilePattern.setEnabled(True)
+            self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
             logger.info("stop watching %s", self.watch_directory)
 
