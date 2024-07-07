@@ -19,9 +19,9 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
+import logging
 import os
 import sys
-import logging
 
 import toml
 

@@ -25,7 +25,6 @@ from enum import Enum
 
 from PyQt5 import QtWidgets, uic
 
-
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path)
 
