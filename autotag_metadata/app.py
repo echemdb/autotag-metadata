@@ -31,11 +31,11 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from yamllint import linter
 
+from .config import Config
 from .file_handling import FileMonitor
+from .ui.logger import LogHandler
 from .ui.template_dialog import TemplateDialog, TemplateDialogType
 from .ui.templatetree import TemplateTree
-from .ui.logger import LogHandler
-from .config import Config
 
 yaml_config_str = """---
 

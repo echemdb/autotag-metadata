@@ -19,9 +19,9 @@
 # ********************************************************************
 
 
-from PyQt6.QtCore import QObject, pyqtSignal
-
 import logging
+
+from PyQt6.QtCore import QObject, pyqtSignal
 
 logger = logging.getLogger(__name__)
 
