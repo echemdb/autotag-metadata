@@ -18,7 +18,7 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 

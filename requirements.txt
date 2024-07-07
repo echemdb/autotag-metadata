@@ -1,6 +1,5 @@
 desktop-app
-pint
-PyQt5
+PyQt6
 toml
 watchdog
 yamllint

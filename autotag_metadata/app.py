@@ -28,7 +28,7 @@ import sys
 import time
 
 import yaml
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from yamllint import linter
 
 from .config import Config
@@ -94,8 +94,8 @@ class AutotagApp(QtWidgets.QMainWindow):
             QtGui.QPixmap(
                 f"{os.path.abspath(os.path.dirname(__file__))}/autotag_metadata.png"
             ),
-            QtGui.QIcon.Selected,
-            QtGui.QIcon.On,
+            QtGui.QIcon.Mode.Selected,
+            QtGui.QIcon.State.On,
         )
         self.setWindowIcon(icon)
 
@@ -490,7 +490,7 @@ def run():
     # log_handler = QPlainTextEditLogger()
     # logger.addHandler(log_handler)
     form.show()  # Show the form
-    app.exec_()  # and execute the app
+    app.exec()  # and execute the app
 
 
 if __name__ == "__main__":  # if we're running file directly and not importing it

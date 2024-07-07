@@ -23,8 +23,8 @@ Treeview of the teaplate dictionary
 # ********************************************************************
 from collections import deque
 
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QTreeView, QVBoxLayout, QWidget
+from PyQt6.QtGui import QStandardItem, QStandardItemModel
+from PyQt6.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
 
 class TemplateTree(QWidget):
