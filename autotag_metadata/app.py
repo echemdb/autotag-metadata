@@ -367,9 +367,16 @@ class AutotagApp(QtWidgets.QMainWindow):
     def toggle_watch(self):
         """Toggle folder watching"""
         if self.btnActivate.isChecked():
+            self.ledFilePattern.setDisabled(True)
             if self.watch_directory:
                 # create new instance of watcher potential
-                self.file_monitor = FileMonitor()
+                if self.ledFilePattern.text() == "":
+                    patterns = None
+                else:
+                    patterns = [
+                        p.strip() for p in self.ledFilePattern.text().split(",")
+                    ]
+                self.file_monitor = FileMonitor(patterns=patterns)
                 self.thread = QtCore.QThread(self)
                 self.file_monitor.getEmitter().create_signal.connect(self.file_created)
                 self.file_monitor.moveToThread(self.thread)
@@ -388,7 +395,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
             self.file_monitor.observer.stop()
-
+            self.ledFilePattern.setEnabled(True)
             logger.info("stop watching %s", self.watch_directory)
 
     def file_created(self, msg):
@@ -484,7 +491,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             yaml.dump(
                 self.parameters, metadata_file, sort_keys=False, allow_unicode=True
             )
-        logger.info("wrote metadata for %s", metadata_file)
+        logger.info("wrote metadata for %s", file + ".meta.yaml")
 
     def get_data(self, model, text_objectname):
         """TODO"""

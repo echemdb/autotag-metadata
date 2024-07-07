@@ -166,6 +166,20 @@
           </property>
          </widget>
         </item>
+        <item>
+          <widget class="QLabel" name="lblFilePattern">
+           <property name="text">
+            <string>File Pattern</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="ledFilePattern">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
        </layout>
       </item>
       <item>
