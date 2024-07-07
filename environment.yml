@@ -13,4 +13,4 @@ dependencies:
   - watchdog
   - yamllint
   - pip:
-    - pyqt6
+    - PyQt6

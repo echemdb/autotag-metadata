@@ -50,11 +50,10 @@
                <x>0</x>
                <y>0</y>
                <width>1122</width>
-               <height>519</height>
+               <height>501</height>
               </rect>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
-             </layout>
+             <layout class="QVBoxLayout" name="verticalLayout_3"/>
             </widget>
            </widget>
           </item>
@@ -97,7 +96,7 @@
          <number>6</number>
         </property>
         <property name="rightMargin">
-            <number>6</number>
+         <number>6</number>
         </property>
         <item>
          <widget class="QLabel" name="label">
@@ -116,18 +115,18 @@
          <widget class="QLineEdit" name="ledTemporaryLoc"/>
         </item>
         <item>
-          <widget class="QPushButton" name="btnUseTemporaryFile">
-           <property name="text">
-            <string>Use</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
+         <widget class="QPushButton" name="btnUseTemporaryFile">
+          <property name="text">
+           <string>Use</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QPushButton" name="btnSelectTemporaryFile">
           <property name="text">
@@ -140,10 +139,10 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <property name="leftMargin">
-          <number>6</number>
+         <number>6</number>
         </property>
         <property name="rightMargin">
-          <number>6</number>
+         <number>6</number>
         </property>
         <item>
          <widget class="QLabel" name="lblWatchedFolder">
@@ -167,19 +166,26 @@
          </widget>
         </item>
         <item>
-          <widget class="QLabel" name="lblFilePattern">
-           <property name="text">
-            <string>File Pattern</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="ledFilePattern">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
+         <widget class="QCheckBox" name="cbRecursiveWatch">
+          <property name="text">
+           <string>Recursive</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lblFilePattern">
+          <property name="text">
+           <string>File Pattern</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="ledFilePattern">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -243,7 +249,7 @@
      <x>0</x>
      <y>0</y>
      <width>1166</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMain">
