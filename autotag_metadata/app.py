@@ -123,6 +123,15 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.yamlText.textChanged.connect(self.act_on_yaml_change)
         self.parameters = {}
 
+        try:
+            self.setGeometry(*self.config._config["windowGeometry"])
+            self.ledFolder.setText(self.config._config["watchFolder"])
+            self.ledTemporaryLoc.setText(self.config._config["temporaryFile"])
+            self.ledFilePatterns.setText(self.config._config["filePatterns"])
+            self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
+        except KeyError:
+            print("failed")
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.reenable_temporary_file_watch)
 
@@ -248,16 +257,16 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         if temporary_file:  # if user didn't pick a directory don't continue
             self.ledTemporaryLoc.setText(temporary_file)
-            self.temporary_file = temporary_file
             self.write_temporary_file()
             logger.info("changed temporary file to %s", temporary_file)
 
     def toggle_watch_temporary_file(self):
         """Toggle temporary file watching"""
+        temporary_file = self.ledTemporaryLoc.text()
         if self.btnUseTemporaryFile.isChecked():
-            if self.temporary_file:
+            if temporary_file:
                 # create new instance of watcher potential
-                splitted = os.path.split(self.temporary_file)
+                splitted = os.path.split(temporary_file)
                 path = os.path.join(*splitted[:-1])
                 file = splitted[-1]
                 self.temporary_file_monitor = FileMonitor(patterns=[file])
@@ -272,7 +281,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                     self.temporary_file_monitor.event_handler, path, recursive=False
                 )  # permission problems with subfolders
                 self.temporary_file_monitor.observer.start()
-                logger.info("watching %s", self.temporary_file)
+                logger.info("watching %s", temporary_file)
             else:
                 self.btnUseTemporaryFile.setChecked(False)
 
@@ -280,16 +289,18 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.btnUseTemporaryFile.setText("Use")
             self.temporary_file_monitor.observer.stop()
 
-            logger.info("stop watching %s", self.temporary_file)
+            logger.info("stop watching %s", temporary_file)
 
     def temporary_file_changed(self):
-        with open(self.temporary_file) as f:
+        with open(self.ledTemporaryLoc.text()) as f:
             self.parameters = yaml.load(f.read(), Loader=yaml.FullLoader)
+        if self.parameters is None:
+            self.parameters = {}
         self.populate_yamltextfield()
         self.populate_mask()
 
     def write_temporary_file(self):
-        with open(self.temporary_file, "w", encoding="utf-8") as metadata_file:
+        with open(self.ledTemporaryLoc.text(), "w", encoding="utf-8") as metadata_file:
             yaml.dump(
                 self.parameters, metadata_file, sort_keys=False, allow_unicode=True
             )
@@ -324,7 +335,6 @@ class AutotagApp(QtWidgets.QMainWindow):
         directory = os.sep.join(directory.split("/"))
         if directory:  # if user didn't pick a directory don't continue
             self.ledFolder.setText(directory)
-            self.watch_directory = directory
             logger.info("changed watching folder to %s", directory)
 
     def enable_activate(self):
@@ -336,8 +346,9 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def toggle_watch(self):
         """Toggle folder watching"""
+        watch_directory = self.ledFolder.text()
         if self.btnActivate.isChecked():
-            if self.watch_directory:
+            if watch_directory:
                 self.ledFolder.setDisabled(True)
                 self.ledFilePatterns.setDisabled(True)
                 self.cbRecursiveWatch.setDisabled(True)
@@ -356,11 +367,11 @@ class AutotagApp(QtWidgets.QMainWindow):
                 self.btnActivate.setText("Deactivate")
                 self.file_monitor.observer.schedule(
                     self.file_monitor.event_handler,
-                    self.watch_directory,
+                    watch_directory,
                     recursive=self.cbRecursiveWatch.isChecked(),
                 )  # permission problems with subfolders
                 self.file_monitor.observer.start()
-                logger.info("watching %s", self.watch_directory)
+                logger.info("watching %s", watch_directory)
             else:
                 self.btnActivate.setChecked(False)
 
@@ -370,7 +381,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledFolder.setEnabled(True)
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
-            logger.info("stop watching %s", self.watch_directory)
+            logger.info("stop watching %s", watch_directory)
 
     def file_created(self, msg):
         """Create the metadata file with timestamp and hash"""
@@ -480,7 +491,13 @@ class AutotagApp(QtWidgets.QMainWindow):
         logger.info("Starting autotag-metadata")
 
     def closeEvent(self, event):
+        self.config._config["windowGeometry"] = self.frameGeometry().getCoords()
+        self.config._config["watchFolder"] = self.ledFolder.text()
+        self.config._config["temporaryFile"] = self.ledTemporaryLoc.text()
+        self.config._config["filePatterns"] = self.ledFilePatterns.text()
+        self.config._config["recursiveWatching"] = self.cbRecursiveWatch.isChecked()
         self.config.save_settings()
+        
         super().closeEvent(event)
         logging.getLogger().removeHandler(self.log_handler)
 
