@@ -1,4 +1,4 @@
-project = "autotag-metadta"
+project = "autotag-metadata"
 copyright = "2021-2023, the autotag-metadata authors"
 author = "the autotag-metadata authors"
 
