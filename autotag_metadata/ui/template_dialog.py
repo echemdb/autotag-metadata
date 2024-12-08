@@ -21,55 +21,55 @@
 # ********************************************************************
 
 import os
-import sys
-import yaml
+from enum import Enum
 
-from PyQt5 import QtWidgets, uic
-
-if sys.platform == "win32":
-    appdata_folder = os.path.join(os.getenv("APPDATA"), "autotag_metadata")
-elif sys.platform == "linux":
-    appdata_folder = os.path.join(os.getenv("HOME"), ".config", "autotag_metadata")
-
-templates_file = os.path.join(appdata_folder, "templates.yaml")
+from PyQt6 import QtWidgets, uic
 
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path)
 
 
+class TemplateDialogType(Enum):
+    Store = "Store Template"
+    Load = "Load Template"
+
+
 class TemplateDialog(QtWidgets.QDialog):
     """The template dialog window"""
-    def __init__(self):
+
+    def __init__(self, dialog_type: TemplateDialogType):
         super(TemplateDialog, self).__init__()
         uic.loadUi(f"{dir_path}/template_dialog.ui", self)
 
         self.buttonBox.accepted.connect(self.accept)
-        #self.close.connect(self.clear_dialog)
         self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(
+            False
+        )
         self.listWidget.selectionModel().selectionChanged.connect(self.updatelineedit)
-        self.toolTip(   )
-
-    # def closeEvent(self, event):
-    #     pass
-    #     #print("X is clicked")
-
-    # def cleardialog(self):
-    #     """"""
-    #     self.lineEdit.clear()
-    #     self.listWidget.clear()
+        self.lineEdit.textChanged.connect(self.updatelineedit_text)
+        self.toolTip()
+        self.setWindowTitle(dialog_type.value)
+        # only allow to load existing templates
+        if dialog_type == TemplateDialogType.Load:
+            self.lineEdit.setEnabled(False)
 
     def accept(self):
         """Read or write templates"""
         super().accept()
 
-        if self.windowTitle() == 'Load Template' and self.listWidget.currentItem() is not None:
-            self.parameters = self.templates[self.listWidget.currentItem().text()]
-        elif self.windowTitle() == 'Store Template' and self.lineEdit.text() != '':
-            self.templates[self.lineEdit.text()] = self.parameters
-
-            with open(templates_file, 'w', encoding="utf-8") as file:
-                yaml.dump(self.templates, file, sort_keys=False)
+        self.template_name = self.lineEdit.text()
 
     def updatelineedit(self):
         """Update template name when selected in list"""
         self.lineEdit.setText(self.listWidget.currentItem().text())
+
+    def updatelineedit_text(self):
+        if self.lineEdit.text() != "":
+            self.buttonBox.button(
+                QtWidgets.QDialogButtonBox.StandardButton.Ok
+            ).setEnabled(True)
+        else:
+            self.buttonBox.button(
+                QtWidgets.QDialogButtonBox.StandardButton.Ok
+            ).setEnabled(False)

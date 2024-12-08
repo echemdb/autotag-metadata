@@ -20,34 +20,36 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtCore, QtWidgets
 
 
 class MyLineEdit(QtWidgets.QLineEdit):
     """A docstring."""
-    textModified = QtCore.pyqtSignal(str, str) # (before, after)
 
-    def __init__(self, contents='', parent=None):
+    textModified = QtCore.pyqtSignal(str, str)  # (before, after)
+
+    def __init__(self, contents="", parent=None):
         super(MyLineEdit, self).__init__()
         self.editingFinished.connect(self.__handleEditingFinished)
         self.textChanged.connect(self.__handleTextChanged)
-        #print(contents)
-        self._before = 't'
+        # print(contents)
+        self._before = "t"
 
     def __handleTextChanged(self, text):
         if not self.hasFocus():
             self._before = text
-            #print(text)
+            # print(text)
 
     def __handleEditingFinished(self):
         before, after = self._before, self.text()
-        #print(before, after)
+        # print(before, after)
         if before != after:
             self._before = after
             self.textModified.emit(before, after)
 
-    def modified_text(self,before,after):
+    def modified_text(self, before, after):
         pass
-        #print(after)
+        # print(after)
+
 
 # main_design.QtWidgets.QLineEdit = MyLineEdit

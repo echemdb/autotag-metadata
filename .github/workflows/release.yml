@@ -25,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       - name: Rename Files
         shell: bash -l {0}
         run: |
@@ -36,7 +36,7 @@ jobs:
           mv linux-exe/autotag-metadata autotag-metadata-linux-${{ github.ref_name }}
           mv macos-exe/autotag-metadata autotag-metadata-macos-${{ github.ref_name }}
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             autotag-metadata-${{ github.ref_name }}.exe

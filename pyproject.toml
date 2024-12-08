@@ -11,12 +11,11 @@ authors = [
   {name = "Johannes Hermann", email = "johannes.hermann@uni-ulm.de"},
 ]
 readme      = "README.md"
-requires-python = ">=3.6.0"
+requires-python = ">=3.8.0"
 dependencies    = [
     "desktop-app",
-    "pyqt5",
+    "PyQt6",
     "watchdog",
-    "pint",
     "yamllint",
     "toml",
 ]
