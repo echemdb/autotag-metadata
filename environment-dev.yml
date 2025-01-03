@@ -1,10 +1,9 @@
 # This file lists the dependencies needed to build and test all of autotag_metadata.
 # Create a conda environment with these dependencies preinstalled with:
 # conda env create -f environment-dev.yml
-name: autotag_metadata-dev
+name: autotag-metadata
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - desktop-app
   - dill
