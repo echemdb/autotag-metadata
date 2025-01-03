@@ -39,12 +39,11 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "${{ matrix.python }}"
-          miniforge-variant: Mambaforge
       - name: Install Dependencies
         shell: bash -l {0}
         run: |
-          mamba env update --quiet -n test -f environment.yml
-          mamba list
+          conda env update --quiet -n test -f environment.yml
+          conda list
         if: ${{ matrix.source == 'conda' }}
       - name: Install Autotag-Metadata (conda)
         shell: bash -l {0}
@@ -64,7 +63,7 @@ jobs:
       # - name: Byexample
       #   shell: bash -l {0}
       #   run: |
-      #     mamba install -y byexample
+      #     conda install -y byexample
       #     byexample -l shell,python -o +norm-ws --timeout=30 README.md
       #   # byexample is not available for Windows
       #   # the exact numerical output of commands differs between Linux & macOS
