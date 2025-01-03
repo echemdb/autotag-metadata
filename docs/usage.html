@@ -1,0 +1,139 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User manual &mdash; autotag-metadata 0. documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2d9fccdd"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            autotag-metadata
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">autotag-metadata</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">User manual</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/echemdb/autotag-metadata/blob/main/doc/usage.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="user-manual">
+<h1>User manual<a class="headerlink" href="#user-manual" title="Link to this heading"></a></h1>
+<p>The autotag-metadata GUI is illustrated in the following figure.</p>
+<p><img alt="Alt text" src="_images/layout_annotated.png" /></p>
+<ol class="arabic simple">
+<li><p>Folder Selection</p></li>
+</ol>
+<p>First select a folder that you whish to observe for file creation.</p>
+<ol class="arabic simple" start="2">
+<li><p>Activate/Deactivate</p></li>
+</ol>
+<p>The folder will only be observed when the program is activated. It can also be tuned off any time.</p>
+<p>When the program is running and a new file is created (<code class="docutils literal notranslate"><span class="pre">test.txt</span></code>), the current content from <code class="docutils literal notranslate"><span class="pre">raw</span> <span class="pre">yaml</span></code> will be written into a new file in the same folder name <code class="docutils literal notranslate"><span class="pre">test.txt.meta.yaml</span></code>.</p>
+<ol class="arabic simple" start="3">
+<li><p>metadata input</p></li>
+</ol>
+<p>When the program is started the mask is empty and metadata must be added in the <code class="docutils literal notranslate"><span class="pre">Raw</span> <span class="pre">Yaml</span></code> tab. such as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">John</span>
+<span class="nt">experiment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</pre></div>
+</div>
+<p>When the input is not valid <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a>, the background color will change to purple.</p>
+<p>Elaborate examples on how a YAML file could look like, can be found in the example section of <a class="reference external" href="https://github.com/echemdb/metadata-schema/tree/main/examples">echemdbs’ metadata-schema</a>.</p>
+<p>Once you are satisfied with your input metadata, you can also edit the fields in the <code class="docutils literal notranslate"><span class="pre">Mask</span></code> tab.</p>
+<ol class="arabic simple" start="4">
+<li><p>Create template</p></li>
+</ol>
+<p>If you intend to use the input metadata multiple times, you can store the current state into a template.</p>
+<ol class="arabic simple" start="5">
+<li><p>Load template</p></li>
+</ol>
+<p>Load a template from a previous session.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, the autotag-metadata authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

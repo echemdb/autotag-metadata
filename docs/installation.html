@@ -1,0 +1,181 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; autotag-metadata 0. documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2d9fccdd"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User manual" href="usage.html" />
+    <link rel="prev" title="Welcome to autotag-metadata’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            autotag-metadata
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-a-terminal">From a Terminal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installation-steps">Installation steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#starting-autotag-metadata">Starting Autotag-Metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#for-developers">For developers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">User manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">autotag-metadata</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/echemdb/autotag-metadata/blob/main/doc/installation.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<section id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Link to this heading"></a></h2>
+<p>The latest installer and/or executable can be found in the <a class="reference external" href="https://github.com/echemdb/autotag-metadata/releases">release section</a>.</p>
+<p>Launch the program from the start menu.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Multiple instances of the program can be launched to watch different folders for file creations.</p>
+</div>
+</section>
+<section id="from-a-terminal">
+<h2>From a Terminal<a class="headerlink" href="#from-a-terminal" title="Link to this heading"></a></h2>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><em>Windows</em>: A terminal such as <a class="reference external" href="https://gitforwindows.org/">Git Bash</a>.</p></li>
+<li><p><em>All platforms</em>: Download and install the appropriate <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda package</a> or <a class="reference external" href="https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html">micromamba package</a> for your platform.</p></li>
+<li><p><em>All platforms</em>: Check if <code class="docutils literal notranslate"><span class="pre">pip</span></code> is installed, else <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">pip</span></code> or <code class="docutils literal notranslate"><span class="pre">mamba</span> <span class="pre">install</span> <span class="pre">pip</span></code>.</p></li>
+</ul>
+</section>
+<section id="installation-steps">
+<h3>Installation steps<a class="headerlink" href="#installation-steps" title="Link to this heading"></a></h3>
+<p>Open a terminal and execute (<em>Windows</em>: right click on a folder and choose <code class="docutils literal notranslate"><span class="pre">Git</span> <span class="pre">Bash</span></code> from the context menu.)</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/echemdb/autotag-metadata
+</pre></div>
+</div>
+<p><em>Windows</em>: Create an icon in the start menu</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>desktop-app<span class="w"> </span>install<span class="w"> </span>autotag_metadata
+</pre></div>
+</div>
+</section>
+<section id="starting-autotag-metadata">
+<h3>Starting Autotag-Metadata<a class="headerlink" href="#starting-autotag-metadata" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>autotag_metadata
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Multiple instances of the program can be launched to observe different folders.</p>
+</div>
+</section>
+</section>
+<section id="for-developers">
+<h2>For developers<a class="headerlink" href="#for-developers" title="Link to this heading"></a></h2>
+<p>Download the repository</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>ssh://git@github.com/echemdb/autotag-metadata.git
+<span class="nb">cd</span><span class="w"> </span>autotag-metadata
+</pre></div>
+</div>
+<p>Install dependencies</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>autotag<span class="w"> </span>--file<span class="w"> </span>environment-dev.yml
+conda<span class="w"> </span>activate<span class="w"> </span>autotag_metadata-dev
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Starting autotag-metadata</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>autotag_metadata
+</pre></div>
+</div>
+<p>To verify changes made to the documentation refer to the <a class="reference external" href="https://github.com/echemdb/autotag-metadata/tree/main/doc/README.md">readme</a> in the repository.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to autotag-metadata’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="User manual" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, the autotag-metadata authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

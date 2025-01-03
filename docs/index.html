@@ -1,0 +1,149 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to autotag-metadata’s documentation! &mdash; autotag-metadata 0. documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2d9fccdd"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            autotag-metadata
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">User manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">autotag-metadata</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to autotag-metadata’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/echemdb/autotag-metadata/blob/main/doc/index.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-autotag-metadata-s-documentation">
+<h1>Welcome to autotag-metadata’s documentation!<a class="headerlink" href="#welcome-to-autotag-metadata-s-documentation" title="Link to this heading"></a></h1>
+<p>Autotag-metadata allows automatic creation of metadata files upon file creation. The input metadata file can be added in a simple GUI or from template YAML files.
+The program was originally developed to create metadata files for experimental data acquired in a laboratory. However, it can be used in any process where files are generated in the file system and the attachment of additional metadata is desired.</p>
+<p>Input and output metadata files are currently in YAML, which can easily be converted in any other kinds of formats such as JSON, XML, …</p>
+<p>The benefit of recording such metadata files is that these machine readable metadata files allow for further usage of the research data in following data management workflows, i.e., to transfer files to a data repository, to update electronic lab notebooks, or perform automated data evaluation based on the available metadata.</p>
+</section>
+<section id="example">
+<h1>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h1>
+<p>Assume a study in which the degradation of a fruit is followed at different temperatures, i.e., the change in color of a banana. For the first temperature the program returns a <code class="docutils literal notranslate"><span class="pre">banana.csv</span></code> and or the second a <code class="docutils literal notranslate"><span class="pre">banana2.csv</span></code>. These files contain a limited amount of information, such as a time <code class="docutils literal notranslate"><span class="pre">t</span></code> and intensity <code class="docutils literal notranslate"><span class="pre">I</span></code> axis.</p>
+<p>All other information on the experimentalist, the banana, and other starting parameters would have to be stored elsewhere (sheet of paper or electronic lab notebook). In combination with autotag-metadata first pre-define some information such as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experimentalist</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Max Mustermann</span>
+<span class="nt">supervisor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">John Doe</span>
+<span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">degradation</span>
+<span class="nt">equipment</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">temperature sensor XY</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">color probe 2.0</span>
+<span class="nt">starting temperature</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span>
+<span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">K</span>
+<span class="nt">humidity</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+<span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;%&#39;</span>
+<span class="nt">fruit</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">banana</span>
+<span class="w">  </span><span class="nt">purchased</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY.MM.DD</span>
+<span class="w">  </span><span class="nt">supplier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Banana corp.</span>
+</pre></div>
+</div>
+<p>When autotag-metadata is active when <code class="docutils literal notranslate"><span class="pre">banana.csv</span></code> is generated, a new file <code class="docutils literal notranslate"><span class="pre">banana.csv.meta.yaml</span></code> is written in the same folder, which contains the pre-defined set of metadata. The next measurement is supposed to be done at 320 K. In that case, while autotag-metadata is still running, we change in the mask of the programm the temperature from 300 to 320 K. Once the next file is created, here <code class="docutils literal notranslate"><span class="pre">banana2.csv</span></code> the newly created <code class="docutils literal notranslate"><span class="pre">banana2.csv.meta.yaml</span></code> will contain the updated temperature.</p>
+<p>An elaborate metadata file for an electrochemistry experiment can be found <a class="reference external" href="https://github.com/echemdb/metadata-schema/blob/main/examples/file_schemas/autotag.yaml">echemdbs’ metadata schema</a> repository.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Multiple instances of the program can be launched to watch different folders for file creations.</p>
+</div>
+<p>Refer to the <a class="reference internal" href="usage.html"><span class="std std-doc">usage</span></a> section for more details on the GUI.</p>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>See the <a class="reference internal" href="installation.html"><span class="std std-doc">installation instructions</span></a> for details.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, the autotag-metadata authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
