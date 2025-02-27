@@ -24,7 +24,6 @@ jobs:
   test-macos-executable-build:
     name: Build MacOS Executable
     uses: ./.github/workflows/build-macos-exe.yml
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:

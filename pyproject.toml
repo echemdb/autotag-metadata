@@ -92,6 +92,7 @@ isort = "ruff check --select I autotag_metadata"
 lint = { depends-on = ["pylint", "black", "isort"]  }
 
 [tool.pixi.feature.doc.dependencies]
+myst-nb = "*"
 myst-parser = "*"
 sphinx = "*"
 sphinx-autobuild = "*"
