@@ -49,9 +49,12 @@ dev = ["dev", "doc", "test", "lint", "packaging"]
 compilers = "*"
 cmake = "*"
 desktop-app = "*"
+toml = "*"
 watchdog = "*"
 yamllint = "*"
-toml = "*"
+
+[tool.pixi.tasks]
+autotag-metadata = "autotag_metadata-gui"
 
 [tool.pixi.pypi-dependencies]
 PyQt6 = "*"

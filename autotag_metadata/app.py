@@ -128,7 +128,9 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledFolder.setText(self.config._config["watchFolder"])
             self.ledTemporaryLoc.setText(self.config._config["temporaryFile"])
             self.ledFilePatterns.setText(self.config._config["filePatterns"])
-            self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
+            self.cbRecursiveWatch.setChecked(
+                bool(self.config._config["recursiveWatching"])
+            )
         except KeyError:
             print("failed")
 
@@ -497,7 +499,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.config._config["filePatterns"] = self.ledFilePatterns.text()
         self.config._config["recursiveWatching"] = self.cbRecursiveWatch.isChecked()
         self.config.save_settings()
-        
+
         super().closeEvent(event)
         logging.getLogger().removeHandler(self.log_handler)
 
