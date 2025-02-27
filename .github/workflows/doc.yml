@@ -22,8 +22,8 @@ jobs:
           cd doc
           mv generated/html generated/html_
           mkdir generated/html
-          mv generated/html_ generated/html/ec_tools
-          touch generated/html/ec_tools/.nojekyll
+          mv generated/html_ generated/html/autotag-metadata
+          touch generated/html/autotag-metadata/.nojekyll
       - name: detect broken links
         shell: pixi run bash -e {0}
         run: pixi run linkcheck
@@ -31,6 +31,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
-          folder: doc/generated/html/ec_tools
+          folder: doc/generated/html/autotag-metadata
           target-folder: docs
         if: ${{ github.event_name == 'push' }}
