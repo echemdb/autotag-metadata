@@ -1,17 +1,17 @@
-# inspired by the pylint repo
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "autotag-metadata"
-license     = {text = "GPL-3.0-or-later"}
+classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
 description = "Tool to auto-write metadata files on file creation"
+readme      = "README.md"
 authors = [
   {name = "Johannes Hermann", email = "johannes.hermann@uni-ulm.de"},
 ]
-readme      = "README.md"
-requires-python = ">=3.8.0"
+
+requires-python = ">=3.9.0"
 dependencies    = [
     "desktop-app",
     "PyQt6",
@@ -19,24 +19,104 @@ dependencies    = [
     "yamllint",
     "toml",
 ]
+
 version = "0.1.0"
 
 [project.urls]
 repository = "https://github.com/echemdb/autotag-metadata"
 
 [tool.setuptools]
-license-files = ["LICENSE"]  # Keep in sync with setup.cfg
+packages = ["autotag_metadata",]
 include-package-data = true
 
 [tool.setuptools.package-data]
 autotag_metadata = ["*.svg", "*.ico", "desktop-app.json"]
 "autotag_metadata.ui" = ["*.ui"]
 
-[tool.setuptools.packages.find]
-exclude = ["helpers"]
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "win-64"]
+
+[tool.pixi.environments]
+python-39 = ["test", "python-39"]
+python-310 = ["test", "python-310"]
+python-311 = ["test", "python-311"]
+python-312 = ["test", "python-312"]
+python-313 = ["test", "python-313"]
+dev = ["dev", "doc", "test", "lint", "packaging"]
+
+[tool.pixi.dependencies]
+compilers = "*"
+cmake = "*"
+desktop-app = "*"
+watchdog = "*"
+yamllint = "*"
+toml = "*"
+
+[tool.pixi.pypi-dependencies]
+PyQt6 = "*"
+autotag-metadata = { path = ".", editable = true }
+
+[tool.pixi.feature.python-39.dependencies]
+python = "3.9.*"
+
+[tool.pixi.feature.python-310.dependencies]
+python = "3.10.*"
+
+[tool.pixi.feature.python-311.dependencies]
+python = "3.11.*"
+
+[tool.pixi.feature.python-312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.python-313.dependencies]
+python = "3.13.*"
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+pytest-xdist = "*"
+
+[tool.pixi.feature.test.tasks]
+doctest = "pytest -n auto --doctest-modules autotag_metadata"
+
+[tool.pixi.feature.lint.dependencies]
+mypy = "*"
+ruff = ">=0.9.7,<0.10"
+types-pyyaml = "*"
+types-toml = "*"
+
+[tool.pixi.feature.lint.tasks]
+pylint = "ruff check autotag_metadata"
+black = "ruff format autotag_metadata"
+isort = "ruff check --select I autotag_metadata"
+lint = { depends-on = ["pylint", "black", "isort"]  }
+
+[tool.pixi.feature.doc.dependencies]
+myst-parser = "*"
+sphinx = "*"
+sphinx-autobuild = "*"
+sphinx-design = "*"
+sphinx_rtd_theme = "*"
+jupytext = "*"
+
+[tool.pixi.feature.doc.tasks]
+doc = "cd doc && make html SPHINXOPTS='-W -n --keep-going'"
+doc-watch = "sphinx-autobuild doc doc/generated/html --watch 'autotag_metadata/*'"
+linkcheck = "cd doc && make linkcheck"
+
+[tool.pixi.feature.packaging.dependencies]
+pyinstaller = "*"
+
+[tool.pixi.feature.packaging.tasks]
+package = "pyinstaller autotag-metadata.spec"
+
+[tool.pixi.feature.dev.dependencies]
+pip = "*"
+conda = "*"
 
 [project.scripts]
 autotag_metadata = "desktop_app:entry_point"
 
 [project.gui-scripts]
 autotag_metadata-gui = "desktop_app:entry_point"
+

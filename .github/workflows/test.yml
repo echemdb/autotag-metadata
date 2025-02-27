@@ -25,46 +25,17 @@ jobs:
     name: Build MacOS Executable
     uses: ./.github/workflows/build-macos-exe.yml
 
-  test-conda:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
+        environment: ["python-39", "python-310", "python-311", "python-312", "python-313"]
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        source: ["conda", "pip"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Conda Environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          python-version: "${{ matrix.python }}"
-      - name: Install Dependencies
-        shell: bash -l {0}
-        run: |
-          conda env update --quiet -n test -f environment.yml
-          conda list
-        if: ${{ matrix.source == 'conda' }}
-      - name: Install Autotag-Metadata (conda)
-        shell: bash -l {0}
-        run: |
-          pip install --no-dependencies .
-        if: ${{ matrix.source == 'conda' }}
-      - name: Install Autotag-Metadata (pip)
-        shell: bash -l {0}
-        run: |
-          pip install .
-        if: ${{ matrix.source == 'pip' }}
-      # - name: Doctest
-      #   shell: bash -l {0}
-      #   run: |
-      #     pytest --doctest-modules autotag_metadata
-      #   if: ${{ matrix.source == 'conda' }}        
-      # - name: Byexample
-      #   shell: bash -l {0}
-      #   run: |
-      #     conda install -y byexample
-      #     byexample -l shell,python -o +norm-ws --timeout=30 README.md
-      #   # byexample is not available for Windows
-      #   # the exact numerical output of commands differs between Linux & macOS
-      #   if: ${{ matrix.os == 'ubuntu-latest' && matrix.source == 'conda' }}
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: prefix-dev/setup-pixi@v0.8.3
+        with: { pixi-version: v0.41.4 }
+      - name: doctest
+        shell: pixi run bash -e {0}
+        run: pixi run -e ${{ matrix.environment }} doctest
