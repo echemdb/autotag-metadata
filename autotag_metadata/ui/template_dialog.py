@@ -43,9 +43,7 @@ class TemplateDialog(QtWidgets.QDialog):
 
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(
-            False
-        )
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.listWidget.selectionModel().selectionChanged.connect(self.updatelineedit)
         self.lineEdit.textChanged.connect(self.updatelineedit_text)
         self.toolTip()
@@ -66,10 +64,6 @@ class TemplateDialog(QtWidgets.QDialog):
 
     def updatelineedit_text(self):
         if self.lineEdit.text() != "":
-            self.buttonBox.button(
-                QtWidgets.QDialogButtonBox.StandardButton.Ok
-            ).setEnabled(True)
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         else:
-            self.buttonBox.button(
-                QtWidgets.QDialogButtonBox.StandardButton.Ok
-            ).setEnabled(False)
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(False)

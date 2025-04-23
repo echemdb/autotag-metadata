@@ -91,9 +91,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
         icon = QtGui.QIcon()
         icon.addPixmap(
-            QtGui.QPixmap(
-                f"{os.path.abspath(os.path.dirname(__file__))}/autotag_metadata.png"
-            ),
+            QtGui.QPixmap(f"{os.path.abspath(os.path.dirname(__file__))}/autotag_metadata.png"),
             QtGui.QIcon.Mode.Selected,
             QtGui.QIcon.State.On,
         )
@@ -128,9 +126,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledFolder.setText(self.config._config["watchFolder"])
             self.ledTemporaryLoc.setText(self.config._config["temporaryFile"])
             self.ledFilePatterns.setText(self.config._config["filePatterns"])
-            self.cbRecursiveWatch.setChecked(
-                bool(self.config._config["recursiveWatching"])
-            )
+            self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
         except KeyError:
             print("failed")
 
@@ -145,9 +141,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.populate_yamltextfield()
         else:
             self.populate_mask()
-            logger.error(
-                "Value types can not be changed in the mask. Please use the text field or editor."
-            )
+            logger.error("Value types can not be changed in the mask. Please use the text field or editor.")
 
     def validate_yaml(self):
         """Change color of raw yaml text field according to validation"""
@@ -164,9 +158,7 @@ class AutotagApp(QtWidgets.QMainWindow):
     def act_on_yaml_change(self):
         """Update mask on change in raw yaml text field"""
         if self.validate_yaml():
-            self.parameters = yaml.load(
-                self.yamlText.toPlainText(), Loader=yaml.FullLoader
-            )
+            self.parameters = yaml.load(self.yamlText.toPlainText(), Loader=yaml.FullLoader)
             if isinstance(self.parameters, dict):
                 self.populate_mask()
                 if self.btnUseTemporaryFile.isChecked():
@@ -253,9 +245,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         """Open the dialog for selecting the temporary to be watched"""
         # self.ledFolder.clear()  # In case there are any existing elements in the list
 
-        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "pushButton", os.getenv("HOME"), "*.yaml"
-        )
+        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
 
         if temporary_file:  # if user didn't pick a directory don't continue
             self.ledTemporaryLoc.setText(temporary_file)
@@ -273,9 +263,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                 file = splitted[-1]
                 self.temporary_file_monitor = FileMonitor(patterns=[file])
                 self.thread_temporary_file = QtCore.QThread(self)
-                self.temporary_file_monitor.getEmitter().modify_signal.connect(
-                    self.temporary_file_changed
-                )
+                self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
                 self.temporary_file_monitor.moveToThread(self.thread_temporary_file)
 
                 self.btnUseTemporaryFile.setText("Do not use")
@@ -303,9 +291,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def write_temporary_file(self):
         with open(self.ledTemporaryLoc.text(), "w", encoding="utf-8") as metadata_file:
-            yaml.dump(
-                self.parameters, metadata_file, sort_keys=False, allow_unicode=True
-            )
+            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
 
     def hidden_write_temporary_file(self):
         # prevent unintended reload
@@ -316,9 +302,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def reenable_temporary_file_watch(self):
-        self.temporary_file_monitor.getEmitter().modify_signal.connect(
-            self.temporary_file_changed
-        )
+        self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
         self.timer.stop()
 
     def enable_use(self):
@@ -358,9 +342,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                 if self.ledFilePatterns.text() == "":
                     patterns = None
                 else:
-                    patterns = [
-                        p.strip() for p in self.ledFilePatterns.text().split(",")
-                    ]
+                    patterns = [p.strip() for p in self.ledFilePatterns.text().split(",")]
                 self.file_monitor = FileMonitor(patterns=patterns)
                 self.thread = QtCore.QThread(self)
                 self.file_monitor.getEmitter().create_signal.connect(self.file_created)
@@ -389,9 +371,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         """Create the metadata file with timestamp and hash"""
         if not msg.endswith(".meta.yaml"):  # metadata files
             logger.info("created %s", msg)
-            self.parameters["time metadata"] = datetime.datetime.now().strftime(
-                "%Y-%m-%dT%H:%M:%S"
-            )
+            self.parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             self.parameters["measurement file name"] = os.path.split(msg)[-1]
 
             hash_str = self.hash_file(msg)
@@ -421,9 +401,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         # blocking of signals necessary to prevent regeneration of mask
         # which leads to a loss of focus of the currently edited mask field
         self.yamlText.blockSignals(True)
-        self.yamlText.setPlainText(
-            yaml.dump(self.parameters, sort_keys=False, allow_unicode=True)
-        )
+        self.yamlText.setPlainText(yaml.dump(self.parameters, sort_keys=False, allow_unicode=True))
         self.yamlText.blockSignals(False)
 
     def recursively_something(self, parameters, parent=""):
@@ -453,9 +431,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def update_yaml(self):
         """Prepare the parameters dict and start population of the raw yaml text field"""
-        self.recurse_dict(
-            self.parameters, self.sender().objectName().split("."), self.sender().text()
-        )
+        self.recurse_dict(self.parameters, self.sender().objectName().split("."), self.sender().text())
         self.populate_yamltextfield()
 
     def recurse_dict(self, deep_dict, listofkeys, text):
@@ -475,16 +451,12 @@ class AutotagApp(QtWidgets.QMainWindow):
     def write_metadata(self, file):
         """Write out metadata in file with file name corresponding to measurement file"""
         with open(file + ".meta.yaml", "w", encoding="utf-8") as metadata_file:
-            yaml.dump(
-                self.parameters, metadata_file, sort_keys=False, allow_unicode=True
-            )
+            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
         logger.info("wrote metadata for %s", file + ".meta.yaml")
 
     def setup_logger(self):
         self.log_handler = LogHandler(self)
-        self.log_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
+        self.log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         logging.getLogger().addHandler(self.log_handler)
         self.log_handler.new_record.connect(self.pteLogging.appendPlainText)
         self.pteLogging.setReadOnly(True)
