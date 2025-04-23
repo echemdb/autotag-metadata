@@ -182,9 +182,7 @@ class TemplateTree(QWidget):
                             temp_list.append(float(child_val.text()))
                         elif child_item_type.text() == str(type(str())):
                             try:  # break when number is input in str field
-                                if child_key.text() not in [
-                                    "crystallographicOrientation"
-                                ]:
+                                if child_key.text() not in ["crystallographicOrientation"]:
                                     float(child_val.text())
                                     return None
                                 else:
@@ -194,9 +192,7 @@ class TemplateTree(QWidget):
                                 temp_dict[child_key.text()] = child_val.text()
                                 temp_list.append(child_val.text())
                         else:
-                            child = self.recurse_items(
-                                child_key, item_type=child_item_type.text()
-                            )
+                            child = self.recurse_items(child_key, item_type=child_item_type.text())
                             temp_dict[child_key.text()] = child
                             temp_list.append(child)
                     except ValueError:
