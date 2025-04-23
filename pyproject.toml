@@ -84,7 +84,7 @@ doctest = "pytest -n auto --doctest-modules autotag_metadata"
 
 [tool.pixi.feature.lint.dependencies]
 mypy = "*"
-ruff = ">=0.9.7,<0.10"
+ruff = ">=0.11"
 types-pyyaml = "*"
 types-toml = "*"
 
@@ -95,13 +95,14 @@ isort = "ruff check --select I autotag_metadata"
 lint = { depends-on = ["pylint", "black", "isort"]  }
 
 [tool.pixi.feature.doc.dependencies]
+jupytext = "*"
 myst-nb = "*"
 myst-parser = "*"
 sphinx = "*"
 sphinx-autobuild = "*"
 sphinx-design = "*"
 sphinx_rtd_theme = "*"
-jupytext = "*"
+
 
 [tool.pixi.feature.doc.tasks]
 doc = "cd doc && make html SPHINXOPTS='-W -n --keep-going'"
@@ -117,6 +118,14 @@ package = "pyinstaller autotag-metadata.spec"
 [tool.pixi.feature.dev.dependencies]
 pip = "*"
 conda = "*"
+
+[tool.ruff]
+lint.select = ["E", "F", "W", "B"]
+lint.ignore = [
+    "B905",
+]
+lint.fixable = ["E", "F", "W", "B"]
+line-length = 115
 
 [project.scripts]
 autotag_metadata = "desktop_app:entry_point"
