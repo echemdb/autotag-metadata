@@ -12,12 +12,7 @@ authors = [
 ]
 
 requires-python = ">=3.9.0"
-dependencies    = [
-    "desktop-app",
-    "PyQt6",
-    "watchdog",
-    "yamllint",
-    "toml",
+dependencies    = [ "desktop-app", "watchdog", "yamllint", "toml", "pyqt6",
 ]
 
 version = "0.1.0"
@@ -43,6 +38,7 @@ python-310 = ["test", "python-310"]
 python-311 = ["test", "python-311"]
 python-312 = ["test", "python-312"]
 python-313 = ["test", "python-313"]
+pyinstaller = ["pyinstaller"]
 dev = ["dev", "doc", "test", "lint", "packaging"]
 
 [tool.pixi.dependencies]
@@ -57,7 +53,6 @@ yamllint = "*"
 autotag-metadata = "autotag_metadata-gui"
 
 [tool.pixi.pypi-dependencies]
-PyQt6 = "*"
 autotag-metadata = { path = ".", editable = true }
 
 [tool.pixi.feature.python-39.dependencies]
@@ -75,6 +70,10 @@ python = "3.12.*"
 [tool.pixi.feature.python-313.dependencies]
 python = "3.13.*"
 
+[tool.pixi.feature.pyinstaller.dependencies]
+pyinstaller = "6.14.*"
+python = "3.13.*"
+
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
 pytest-xdist = "*"
@@ -84,7 +83,7 @@ doctest = "pytest -n auto --doctest-modules autotag_metadata"
 
 [tool.pixi.feature.lint.dependencies]
 mypy = "*"
-ruff = ">=0.11"
+ruff = "*"
 types-pyyaml = "*"
 types-toml = "*"
 
