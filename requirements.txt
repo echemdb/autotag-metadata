@@ -1,5 +1,0 @@
-desktop-app
-PyQt6
-toml
-watchdog
-yamllint
