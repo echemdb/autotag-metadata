@@ -19,5 +19,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-exe
-        path: dist/autotag-metadata
+        path: dist/autotag-metadata.exe
         if-no-files-found: error
