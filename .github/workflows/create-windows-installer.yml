@@ -11,9 +11,9 @@ jobs:
       LIGHT: "C:/Program Files (x86)/WiX Toolset v3.14/bin/light.exe"
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Download Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: windows-exe
           path: installer
@@ -25,7 +25,7 @@ jobs:
           "$LIGHT" obj/*.wixobj -o bin/Installer.msi -ext WixUtilExtension -ext WixUIExtension
           ls -la bin
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-installer
           path: installer/bin/Installer.msi
