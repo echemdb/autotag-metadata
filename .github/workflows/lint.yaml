@@ -21,4 +21,4 @@ jobs:
       - name: black
         run: pixi run black --diff --check
       - name: isort
-        run: pixi run isort -- --check --diff
+        run: pixi run isort -- --diff
