@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download Artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
       - name: Rename Files
         shell: bash -l {0}
         run: |
@@ -36,7 +36,7 @@ jobs:
           mv linux-exe/autotag-metadata autotag-metadata-linux-${{ github.ref_name }}
           mv macos-exe/autotag-metadata autotag-metadata-macos-${{ github.ref_name }}
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             autotag-metadata-${{ github.ref_name }}.exe
