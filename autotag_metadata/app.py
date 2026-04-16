@@ -116,6 +116,8 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.template_tree.model.dataChanged.connect(self.on_tree_data_change)
         self.scrollArea.setWidget(self.template_tree)
 
+        self.label_dropzone.files_submitted.connect(self._on_files_submitted)
+
         self.ledFolder.textChanged.connect(self.enable_activate)
         self.btnActivate.setDisabled(True)
         self.yamlText.textChanged.connect(self.act_on_yaml_change)
@@ -366,6 +368,11 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
             logger.info("stop watching %s", watch_directory)
+
+    def _on_files_submitted(self, paths):
+        """Handle files dropped onto the dropzone"""
+        for path in paths:
+            self.file_created(path)
 
     def file_created(self, msg):
         """Create the metadata file with timestamp and hash"""

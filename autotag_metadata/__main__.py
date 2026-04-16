@@ -18,12 +18,15 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
-
-import desktop_app
+import sys
 
 from autotag_metadata import app
 
-desktop_app.set_process_appid("autotag_metadata")
+
+if sys.platform == "win32":
+    import ctypes
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("autotag_metadata")
 
 
 def main():

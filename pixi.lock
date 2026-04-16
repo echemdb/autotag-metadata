@@ -2532,7 +2532,7 @@ packages:
 - pypi: ./
   name: autotag-metadata
   version: 0.1.0
-  sha256: 727ecff2b04136289ba066a5f102aee7268d15e2c70bfadbf5150edd9e1d7047
+  sha256: 08c04d01a1e674f376c6fd257fa58b6a0947809187af3cbe57ce8015c51d4738
   requires_dist:
   - desktop-app
   - watchdog

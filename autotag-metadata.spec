@@ -6,6 +6,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[("README.md", "."),
+    ("autotag_metadata/ui/labeldropzone.py", "autotag_metadata/ui"),
     ("autotag_metadata/ui/main_window.ui", "autotag_metadata/ui"),
     ("autotag_metadata/ui/template_dialog.ui", "autotag_metadata/ui")],
     hiddenimports=[],

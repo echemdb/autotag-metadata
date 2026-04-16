@@ -1,5 +1,5 @@
 """
-Treeview of the teaplate dictionary
+Treeview of the template dictionary
 """
 
 # ********************************************************************

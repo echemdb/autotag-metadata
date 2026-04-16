@@ -104,7 +104,6 @@ doc-watch = "sphinx-autobuild doc doc/generated/html --watch 'autotag_metadata/*
 linkcheck = "cd doc && make linkcheck"
 
 [tool.pixi.feature.packaging.dependencies]
-distlib = "*"
 pyinstaller = "*"
 python = "*"
 
