@@ -34,16 +34,16 @@ class LabelDropzone(QLabel):
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat("text/plain"):
+        if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event):
-        if event.mimeData().hasFormat("text/plain"):
+        if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        filelist = event.mimeData().text().strip().split(" /")
-        filelist = filelist[0:1] + ["/" + filename for filename in filelist[1:]]
-        filelist = [filename.replace("file:///", "/") for filename in filelist]
+        urls = event.mimeData().urls()
+        filelist = [url.toLocalFile() for url in urls if url.isLocalFile()]
+
         event.acceptProposedAction()
         self.files_submitted.emit(filelist)
