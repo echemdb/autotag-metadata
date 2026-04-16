@@ -30,7 +30,7 @@ autotag_metadata = ["*.svg", "*.ico", "desktop-app.json"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "win-64"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.environments]
 python-310 = ["test", "python-310"]
