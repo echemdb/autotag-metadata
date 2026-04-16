@@ -45,9 +45,13 @@ dev = ["dev", "doc", "test", "lint"]
 compilers = "*"
 cmake = "*"
 desktop-app = "*"
+pyqt6 = "*"
 toml = "*"
 watchdog = "*"
 yamllint = "*"
+
+[tool.pixi.activation.env]
+QT_PLUGIN_PATH = "$CONDA_PREFIX/lib/qt6/plugins"
 
 [tool.pixi.tasks]
 autotag-metadata = "autotag_metadata-gui"
