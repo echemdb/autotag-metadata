@@ -12,7 +12,7 @@ authors = [
 ]
 
 requires-python = ">=3.10.0"
-dependencies    = [ "desktop-app", "watchdog", "yamllint", "toml", "pyqt6",
+dependencies    = [ "desktop-app", "watchfiles", "yamllint", "toml", "pyqt6",
 ]
 
 version = "0.1.0"
@@ -47,7 +47,7 @@ cmake = "*"
 desktop-app = "*"
 pyqt6 = "*"
 toml = "*"
-watchdog = "*"
+watchfiles = "*"
 yamllint = "*"
 
 [tool.pixi.activation.env]

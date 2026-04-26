@@ -345,25 +345,19 @@ class AutotagApp(QtWidgets.QMainWindow):
                     patterns = None
                 else:
                     patterns = [p.strip() for p in self.ledFilePatterns.text().split(",")]
-                self.file_monitor = FileMonitor(patterns=patterns)
-                self.thread = QtCore.QThread(self)
-                self.file_monitor.getEmitter().create_signal.connect(self.file_created)
-                self.file_monitor.moveToThread(self.thread)
+                self.file_monitor = FileMonitor(watch_directory, patterns=patterns)
+                self.file_monitor.create_signal.connect(self.file_created)
 
                 self.btnActivate.setText("Deactivate")
-                self.file_monitor.observer.schedule(
-                    self.file_monitor.event_handler,
-                    watch_directory,
-                    recursive=self.cbRecursiveWatch.isChecked(),
-                )  # permission problems with subfolders
-                self.file_monitor.observer.start()
+                self.file_monitor.start()
                 logger.info("watching %s", watch_directory)
             else:
                 self.btnActivate.setChecked(False)
 
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
-            self.file_monitor.observer.stop()
+            self.file_monitor.stop()
+            self.file_monitor.wait()
             self.ledFolder.setEnabled(True)
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
