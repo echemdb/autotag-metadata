@@ -27,16 +27,19 @@ import toml
 
 if sys.platform == "win32":
     appdata_path = os.path.join(os.getenv("APPDATA"), "autotag-metadata")
+elif sys.platform == "darwin":
+    appdata_path = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "autotag-metadata")
 elif sys.platform == "linux":
     appdata_path = os.path.join(os.getenv("HOME"), ".config", "autotag-metadata")
+else:
+    raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
 templates_path = os.path.join(appdata_path, "templates")
 
-if not os.path.exists(appdata_path):
-    os.mkdir(appdata_path)
-    os.mkdir(templates_path)
-elif not os.path.isdir(appdata_path):
+if os.path.exists(appdata_path) and not os.path.isdir(appdata_path):
     raise FileExistsError("Config path is not a folder.")
+
+os.makedirs(templates_path, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 

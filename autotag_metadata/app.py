@@ -25,7 +25,6 @@ import hashlib
 import logging
 import os
 import sys
-import time
 
 import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
@@ -369,33 +368,40 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.file_created(path)
 
     def file_created(self, msg):
-        """Create the metadata file with timestamp and hash"""
-        if not msg.endswith(".meta.yaml"):  # metadata files
+        """Create the metadata file with timestamp and hash."""
+        if not msg.endswith(".meta.yaml"):
             logger.info("created %s", msg)
             self.parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             self.parameters["measurement file name"] = os.path.split(msg)[-1]
 
             hash_str = self.hash_file(msg)
+            if hash_str is None:
+                logger.error("Skipping metadata for %s — hashing failed", msg)
+                return
             self.parameters["measurement file sha512"] = hash_str
 
             self.write_metadata(msg)
 
-    def hash_file(self, filename):
-        """Generate sha512 hash of the measurement file
-        TODO improve and remove recursion
+    def hash_file(self, filename, max_retries=5, retry_delay=1.0):
+        """Generate sha512 hash of the measurement file.
+
+        Retries up to ``max_retries`` times when the file is still locked or
+        not yet fully written to disk.
         """
-        try:
-            sha512_hash = hashlib.sha512()
-            with open(filename, "rb") as file:
-                # Read and update hash string value in blocks of 4K
-                for byte_block in iter(lambda: file.read(4096), b""):
-                    sha512_hash.update(byte_block)
-            return sha512_hash.hexdigest()
-        # while file is created it is locked or doesnot exist yet??
-        except (PermissionError, FileNotFoundError) as err:
-            time.sleep(1)
-            logger.exception("wrote metadata for %s", err)
-            return self.hash_file(filename)
+        for attempt in range(1, max_retries + 1):
+            try:
+                sha512_hash = hashlib.sha512()
+                with open(filename, "rb") as file:
+                    for byte_block in iter(lambda: file.read(4096), b""):
+                        sha512_hash.update(byte_block)
+                return sha512_hash.hexdigest()
+            except (PermissionError, FileNotFoundError) as err:
+                if attempt < max_retries:
+                    logger.warning("Attempt %d/%d — cannot read %s: %s", attempt, max_retries, filename, err)
+                    QtCore.QThread.msleep(int(retry_delay * 1000))
+                else:
+                    logger.error("Failed to hash %s after %d attempts: %s", filename, max_retries, err)
+                    return None
 
     def populate_yamltextfield(self):
         """Change the text of the raw yaml field when field text is changed in the mask"""
