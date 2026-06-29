@@ -17,46 +17,35 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
-
+import fnmatch
+import threading
+from watchfiles import Change, watch
 from PyQt6 import QtCore
-from watchdog.events import PatternMatchingEventHandler
-from watchdog.observers import Observer
 
 
-class MyEventHandler(PatternMatchingEventHandler, QtCore.QThread):
+class FileMonitor(QtCore.QThread):
     create_signal = QtCore.pyqtSignal(str)
     modify_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, patterns=None):
-        super(MyEventHandler, self).__init__(patterns=patterns)
-        # self.filename = filename
-        # self.signalName = str(filename) + "_modified"
+    def __init__(self, path, patterns=None):
+        super().__init__()
+        self.path = path
+        self.patterns = patterns
+        self._stop_event = threading.Event()
 
-    def on_created(self, event):
-        self.create_signal.emit(str(event.src_path))
-
-        # self.create_signal.emit('test')
-
-    def on_modified(self, event):
-        self.modify_signal.emit(str(event.src_path))
-
-
-class FileMonitor(QtCore.QObject):
-    def __init__(self, patterns=None):
-        super(FileMonitor, self).__init__()
-        # self.path = path
-        # self.filename = filename
-        self.observer = Observer()
-        self.event_handler = MyEventHandler(patterns=patterns)
-
-    def blind(self):
-        pass
+    def stop(self):
+        self._stop_event.set()
 
     def run(self):
-        pass
+        for changes in watch(self.path, stop_event=self._stop_event):
+            for change, file_path in changes:
+                file_path = str(file_path)
 
-    def getEmitter(self):
-        return self.event_handler
+                if self.patterns:
+                    if not any(fnmatch.fnmatch(file_path, p) for p in self.patterns):
+                        continue
 
-    # def getSignalName(self):
-    #    return self.event_handler.signalName
+                if change == Change.added:
+                    self.create_signal.emit(file_path)
+                elif change == Change.modified:
+                    self.modify_signal.emit(file_path)
