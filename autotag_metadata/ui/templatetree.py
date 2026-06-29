@@ -38,7 +38,6 @@ class TemplateTree(QWidget):
         self.model.setHorizontalHeaderLabels(["Key", "Value", "Type"])
 
         self.tree.setModel(self.model)
-        # self.tree.hideColumn(2)
         self.import_from_dict(data)
 
     def import_from_dict(self, data, root=None):

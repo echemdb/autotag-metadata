@@ -72,7 +72,6 @@ rules:
 
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("INFO")
 
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path)
@@ -103,11 +102,8 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.btnUseTemporaryFile.clicked.connect(self.toggle_watch_temporary_file)
         self.btnUseTemporaryFile.setDisabled(True)
         self.ledTemporaryLoc.textChanged.connect(self.enable_use)
-        # It sets up layout and widgets that are defined
-        self.btnBrowse.clicked.connect(self.browse_folder)  # When the button is pressed
-        # Execute browse_folder function
+        self.btnBrowse.clicked.connect(self.browse_folder)
         self.btnActivate.clicked.connect(self.toggle_watch)
-        # Template management
         self.btnStore.clicked.connect(self.store_template)
         self.btnLoad.clicked.connect(self.load_template)
 
@@ -129,7 +125,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledFilePatterns.setText(self.config._config["filePatterns"])
             self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
         except KeyError:
-            print("failed")
+            logger.warning("Some config keys missing — using defaults")
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.reenable_temporary_file_watch)
@@ -159,26 +155,11 @@ class AutotagApp(QtWidgets.QMainWindow):
     def act_on_yaml_change(self):
         """Update mask on change in raw yaml text field"""
         if self.validate_yaml():
-            self.parameters = yaml.load(self.yamlText.toPlainText(), Loader=yaml.FullLoader)
+            self.parameters = yaml.safe_load(self.yamlText.toPlainText())
             if isinstance(self.parameters, dict):
                 self.populate_mask()
                 if self.btnUseTemporaryFile.isChecked():
                     self.hidden_write_temporary_file()
-
-    # def __handleTextChanged(self, text):
-    #     #print("fired handled text")
-    #     if not self.hasFocus():
-    #         self._before = text
-
-    # def __handleEditingFinished(self):
-    #     #print("fired finished editing")
-    #     before, after = self._before, self.text()
-    #     if before != after:
-    #         self._before = after
-    #         self.textModified.emit(before, after)
-
-    def check_input(self):
-        """Extended input checking of raw yaml input possibly schema"""
 
     def load_template(self):
         """Open the dialog for loading templates"""
@@ -187,50 +168,9 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         if template_dialog.exec():
             yaml_text = self.config.load_template(template_dialog.template_name)
-            self.parameters = yaml.load(yaml_text, Loader=yaml.FullLoader)
+            self.parameters = yaml.safe_load(yaml_text)
             self.populate_yamltextfield()
             self.populate_mask()
-
-    # @QtCore.pyqtSlot(str)
-    # def load_template(self, filepath):
-    #     """Open the dialog for loading templates"""
-    #     self.template_dialog.setWindowTitle("Load Template")
-    #     try:
-    #         with open(templates_file, encoding="utf-8") as file:
-    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-    #     except FileNotFoundError:
-    #         self.template_dialog.templates = {}
-
-    #     if not isinstance(self.template_dialog.templates, dict):
-    #         self.template_dialog.templates = {}
-
-    #     self.template_dialog.listWidget.clear()
-    #     self.template_dialog.lineEdit.clear()
-    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-    #     if self.template_dialog.exec_() and hasattr(self.template_dialog, "parameters"):
-    #         self.parameters = self.template_dialog.parameters
-    #         self.populate_mask()
-    #         self.populate_yamltextfield()
-
-    # @QtCore.pyqtSlot(str)
-    # def store_template(self, filepath):
-    #     """Open the dialog for storing templates"""
-    #     self.template_dialog.setWindowTitle("Store Template")
-    #     try:
-    #         with open(templates_file, encoding="utf-8") as file:
-    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-    #     except FileNotFoundError:
-    #         self.template_dialog.templates = {}
-
-    #     if not isinstance(self.template_dialog.templates, dict):
-    #         self.template_dialog.templates = {}
-
-    #     self.template_dialog.parameters = self.parameters
-    #     self.template_dialog.listWidget.clear()
-    #     self.template_dialog.lineEdit.clear()
-
-    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-    #     self.template_dialog.exec_()
 
     def store_template(self):
         """Open the dialog for storing templates"""
@@ -244,8 +184,6 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def select_temporary_file(self):
         """Open the dialog for selecting the temporary to be watched"""
-        # self.ledFolder.clear()  # In case there are any existing elements in the list
-
         temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
 
         if temporary_file:  # if user didn't pick a directory don't continue
@@ -284,7 +222,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def temporary_file_changed(self):
         with open(self.ledTemporaryLoc.text()) as f:
-            self.parameters = yaml.load(f.read(), Loader=yaml.FullLoader)
+            self.parameters = yaml.safe_load(f.read())
         if self.parameters is None:
             self.parameters = {}
         self.populate_yamltextfield()
@@ -315,10 +253,7 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def browse_folder(self):
         """Open the dialog for selecting the folder to be watched"""
-        # self.ledFolder.clear()  # In case there are any existing elements in the list
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")
-        # execute getExistingDirectory dialog and set the directory variable to be equal
-        # to the user selected directory
         directory = os.sep.join(directory.split("/"))
         if directory:  # if user didn't pick a directory don't continue
             self.ledFolder.setText(directory)
@@ -411,46 +346,6 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.yamlText.setPlainText(yaml.dump(self.parameters, sort_keys=False, allow_unicode=True))
         self.yamlText.blockSignals(False)
 
-    def recursively_something(self, parameters, parent=""):
-        """Rudimentary generation of the mask.
-        Should be replaced by a proper model in the future.
-        """
-        for key, val in parameters.items():
-            if isinstance(val, dict):
-                if parent == "":
-                    self.recursively_something(val, key)
-                else:
-                    self.recursively_something(val, f"{parent}.{key}")
-            else:
-                label = QtWidgets.QLabel(self.centralwidget)
-                lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-                if parent == "":
-                    label.setText(f"{key}")
-                    lineEdit.setObjectName(f"{key}")
-                else:
-                    label.setText(f"{parent}.{key}")
-                    lineEdit.setObjectName(f"{parent}.{key}")
-
-                self.verticalLayout_2.addWidget(label)
-                lineEdit.setText(str(val))
-                lineEdit.textChanged.connect(self.update_yaml)
-                self.verticalLayout_2.addWidget(lineEdit)
-
-    def update_yaml(self):
-        """Prepare the parameters dict and start population of the raw yaml text field"""
-        self.recurse_dict(self.parameters, self.sender().objectName().split("."), self.sender().text())
-        self.populate_yamltextfield()
-
-    def recurse_dict(self, deep_dict, listofkeys, text):
-        """
-        Recurse dict
-        Needs test case
-        """
-        if len(listofkeys) > 1:
-            self.recurse_dict(deep_dict[listofkeys[0]], listofkeys[1:], text)
-        else:
-            deep_dict[listofkeys[0]] = text
-
     def populate_mask(self):
         """Generate input tree from parameters dict"""
         self.template_tree.import_from_dict(self.parameters)
@@ -485,16 +380,11 @@ class AutotagApp(QtWidgets.QMainWindow):
 
 def run():
     """Start Application"""
-    app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
-
-    form = AutotagApp()  # We set the form to be our ExampleApp (design)
-    # Set up logging to use your widget as a handler
-
-    # log_handler = QPlainTextEditLogger()
-    # logger.addHandler(log_handler)
-    form.show()  # Show the form
-    app.exec()  # and execute the app
+    app = QtWidgets.QApplication(sys.argv)
+    form = AutotagApp()
+    form.show()
+    app.exec()
 
 
-if __name__ == "__main__":  # if we're running file directly and not importing it
-    run()  # run the main function
+if __name__ == "__main__":
+    run()
