@@ -1,3 +1,4 @@
+"""Filesystem monitoring — event handler and observer lifecycle management."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -17,26 +18,31 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
+
 import fnmatch
 import threading
-from watchfiles import Change, watch
+from typing import Optional
+
 from PyQt6 import QtCore
+from watchfiles import Change, watch
 
 
 class FileMonitor(QtCore.QThread):
+    """Watchdog event handler that emits Qt signals on file creation/modification."""
+
     create_signal = QtCore.pyqtSignal(str)
     modify_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, path, patterns=None):
+    def __init__(self, path: str, patterns: Optional[list[str]] = None) -> None:
         super().__init__()
         self.path = path
         self.patterns = patterns
         self._stop_event = threading.Event()
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop_event.set()
 
-    def run(self):
+    def run(self) -> None:
         for changes in watch(self.path, stop_event=self._stop_event):
             for change, file_path in changes:
                 file_path = str(file_path)

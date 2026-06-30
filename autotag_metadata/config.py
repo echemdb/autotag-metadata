@@ -22,24 +22,23 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import toml
 
 if sys.platform == "win32":
-    appdata_path = os.path.join(os.getenv("APPDATA"), "autotag-metadata")
+    appdata_path: Path = Path(os.environ["APPDATA"]) / "autotag-metadata"
 elif sys.platform == "darwin":
-    appdata_path = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "autotag-metadata")
-elif sys.platform == "linux":
-    appdata_path = os.path.join(os.getenv("HOME"), ".config", "autotag-metadata")
+    appdata_path = Path.home() / "Library" / "Application Support" / "autotag-metadata"
 else:
-    raise RuntimeError(f"Unsupported platform: {sys.platform}")
+    appdata_path = Path.home() / ".config" / "autotag-metadata"
 
-templates_path = os.path.join(appdata_path, "templates")
+templates_path: Path = appdata_path / "templates"
 
-if os.path.exists(appdata_path) and not os.path.isdir(appdata_path):
+if appdata_path.exists() and not appdata_path.is_dir():
     raise FileExistsError("Config path is not a folder.")
 
-os.makedirs(templates_path, exist_ok=True)
+templates_path.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +47,9 @@ class Config:
     """Persistent application configuration backed by a TOML file."""
 
     def __init__(self) -> None:
-        self._config_path = os.path.join(appdata_path, "config.toml")
-        if os.path.exists(self._config_path):
-            with open(self._config_path, "r") as f:
+        self._config_path = appdata_path / "config.toml"
+        if self._config_path.exists():
+            with open(self._config_path) as f:
                 self._config = toml.load(f)
             logger.info("config file: %s", self._config_path)
             logger.info("template files in %s", templates_path)
@@ -123,13 +122,11 @@ class Config:
 
     def load_template(self, name: str) -> str:
         """Read and return template content by *name*."""
-        with open(os.path.join(templates_path, self._config["templates"][name])) as f:
-            return f.read()
+        return (templates_path / self._config["templates"][name]).read_text()
 
     def save_template(self, name: str, content: str) -> None:
         """Save *content* as a template under *name*."""
-        file_path = os.path.join(templates_path, name + ".yaml")
-        with open(file_path, "w") as f:
-            f.write(content)
+        file_path = templates_path / (name + ".yaml")
+        file_path.write_text(content)
         self._config["templates"][name] = name + ".yaml"
         self._write_config()

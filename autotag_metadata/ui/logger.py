@@ -1,3 +1,4 @@
+"""Qt logging handler — bridges Python logging records to a QPlainTextEdit widget."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -18,7 +19,6 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-
 import logging
 
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class LogHandler(QObject, logging.Handler):
-    """PlainTextLogger"""
+    """Logging handler that emits formatted records as Qt signals."""
 
     new_record = pyqtSignal(object)
 

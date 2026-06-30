@@ -76,10 +76,11 @@ python = "3.14.*"
 
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
+pytest-qt = "*"
 pytest-xdist = "*"
 
 [tool.pixi.feature.test.tasks]
-doctest = "pytest -n auto --doctest-modules autotag_metadata"
+doctest = "pytest --doctest-modules autotag_metadata tests/"
 
 [tool.pixi.feature.lint.dependencies]
 mypy = "*"

@@ -20,13 +20,12 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-import os
 from enum import Enum
+from pathlib import Path
 
 from PyQt6 import QtWidgets, uic
 
-path = os.path.abspath(__file__)
-dir_path = os.path.dirname(path)
+_DIR = Path(__file__).parent
 
 
 class TemplateDialogType(Enum):
@@ -39,7 +38,7 @@ class TemplateDialog(QtWidgets.QDialog):
 
     def __init__(self, dialog_type: TemplateDialogType):
         super(TemplateDialog, self).__init__()
-        uic.loadUi(f"{dir_path}/template_dialog.ui", self)
+        uic.loadUi(_DIR / "template_dialog.ui", self)
 
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)

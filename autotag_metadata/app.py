@@ -21,8 +21,8 @@
 # ********************************************************************
 
 import logging
-import os
 import sys
+from pathlib import Path
 
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
@@ -36,8 +36,7 @@ from .ui.templatetree import TemplateTree
 
 logger = logging.getLogger(__name__)
 
-path = os.path.abspath(__file__)
-dir_path = os.path.dirname(path)
+_DIR = Path(__file__).parent
 
 
 class AutotagApp(QtWidgets.QMainWindow):
@@ -45,12 +44,12 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(AutotagApp, self).__init__(*args, **kwargs)
-        uic.loadUi(f"{dir_path}/ui/main_window.ui", self)
+        uic.loadUi(_DIR / "ui" / "main_window.ui", self)
 
         self.setWindowTitle("Autotag Metadata")
         icon = QtGui.QIcon()
         icon.addPixmap(
-            QtGui.QPixmap(f"{dir_path}/autotag_metadata.png"),
+            QtGui.QPixmap(str(_DIR / "autotag_metadata.png")),
             QtGui.QIcon.Mode.Selected,
             QtGui.QIcon.State.On,
         )
@@ -160,7 +159,11 @@ class AutotagApp(QtWidgets.QMainWindow):
         template_dialog.listWidget.addItems(self.config.template_names)
 
         if template_dialog.exec():
-            yaml_text = self.config.load_template(template_dialog.template_name)
+            try:
+                yaml_text = self.config.load_template(template_dialog.template_name)
+            except OSError as exc:
+                QtWidgets.QMessageBox.warning(self, "Load Template Failed", str(exc))
+                return
             self.parameters = parse_yaml(yaml_text)
             self._populate_yamltextfield()
             self._populate_mask()
@@ -172,13 +175,16 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         content = self.yamlText.toPlainText()
         if template_dialog.exec():
-            self.config.save_template(template_dialog.template_name, content)
+            try:
+                self.config.save_template(template_dialog.template_name, content)
+            except OSError as exc:
+                QtWidgets.QMessageBox.warning(self, "Store Template Failed", str(exc))
 
     # -- temporary file management -----------------------------------------
 
     def select_temporary_file(self):
         """Open a file dialog to select the temporary YAML file."""
-        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
+        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", str(Path.home()), "*.yaml")
         if temporary_file:
             self.ledTemporaryLoc.setText(temporary_file)
             self._write_temporary_file()
@@ -189,27 +195,28 @@ class AutotagApp(QtWidgets.QMainWindow):
         temporary_file = self.ledTemporaryLoc.text()
         if self.btnUseTemporaryFile.isChecked():
             if temporary_file:
-                directory, filename = os.path.split(temporary_file)
-                self._temporary_file_monitor = FileMonitor(patterns=[filename])
-                self._temporary_file_monitor.getEmitter().modify_signal.connect(self._temporary_file_changed)
-
+                tmp = Path(temporary_file)
+                self._temporary_file_monitor = FileMonitor(str(tmp.parent), patterns=[tmp.name])
+                self._temporary_file_monitor.modify_signal.connect(self._temporary_file_changed)
                 self.btnUseTemporaryFile.setText("Do not use")
-                self._temporary_file_monitor.observer.schedule(
-                    self._temporary_file_monitor.event_handler, directory, recursive=False
-                )
-                self._temporary_file_monitor.observer.start()
+                self._temporary_file_monitor.start()
                 logger.info("watching %s", temporary_file)
             else:
                 self.btnUseTemporaryFile.setChecked(False)
 
         elif not self.btnUseTemporaryFile.isChecked():
             self.btnUseTemporaryFile.setText("Use")
-            self._temporary_file_monitor.observer.stop()
+            self._temporary_file_monitor.stop()
+            self._temporary_file_monitor.wait()
             logger.info("stop watching %s", temporary_file)
 
-    def _temporary_file_changed(self):
-        with open(self.ledTemporaryLoc.text()) as f:
-            self.parameters = parse_yaml(f.read())
+    def _temporary_file_changed(self, path: str = "") -> None:  # noqa: ARG002
+        try:
+            with open(self.ledTemporaryLoc.text()) as f:
+                self.parameters = parse_yaml(f.read())
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Temporary File Error", str(exc))
+            return
         if self.parameters is None:
             self.parameters = {}
         self._populate_yamltextfield()
@@ -221,18 +228,18 @@ class AutotagApp(QtWidgets.QMainWindow):
     def _hidden_write_temporary_file(self):
         """Write the temporary file while suppressing the file-change signal."""
         if not self._temporary_write_timer.isActive():
-            self._temporary_file_monitor.getEmitter().modify_signal.disconnect()
+            self._temporary_file_monitor.modify_signal.disconnect()
         self._write_temporary_file()
         self._temporary_write_timer.start(1000)
 
     @QtCore.pyqtSlot()
     def _reenable_temporary_file_watch(self):
-        self._temporary_file_monitor.getEmitter().modify_signal.connect(self._temporary_file_changed)
+        self._temporary_file_monitor.modify_signal.connect(self._temporary_file_changed)
         self._temporary_write_timer.stop()
 
     def _enable_use(self):
         """Enable the 'Use' button when the temporary file path is valid."""
-        if os.path.exists(self.ledTemporaryLoc.text()):
+        if Path(self.ledTemporaryLoc.text()).exists():
             self.btnUseTemporaryFile.setEnabled(True)
         else:
             self.btnUseTemporaryFile.setDisabled(True)
@@ -241,15 +248,14 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def browse_folder(self):
         """Open a directory picker for the watched folder."""
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")
-        directory = os.sep.join(directory.split("/"))
+        directory = str(Path(QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")))
         if directory:
             self.ledFolder.setText(directory)
             logger.info("changed watching folder to %s", directory)
 
     def _enable_activate(self):
         """Enable the Activate button when the folder path is valid."""
-        if os.path.exists(self.ledFolder.text()):
+        if Path(self.ledFolder.text()).exists():
             self.btnActivate.setEnabled(True)
         else:
             self.btnActivate.setDisabled(True)
@@ -272,6 +278,7 @@ class AutotagApp(QtWidgets.QMainWindow):
                 self._file_monitor.create_signal.connect(self._file_created)
 
                 self.btnActivate.setText("Deactivate")
+                self.setWindowTitle(f"Autotag Metadata — {watch_directory}")
                 self._file_monitor.start()
 
                 logger.info("watching %s", watch_directory)
@@ -280,17 +287,13 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
+            self.setWindowTitle("Autotag Metadata")
             self._file_monitor.stop()
             self._file_monitor.wait()
             self.ledFolder.setEnabled(True)
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
             logger.info("stop watching %s", watch_directory)
-
-    def _on_files_submitted(self, paths):
-        """Handle files dropped onto the dropzone"""
-        for path in paths:
-            self.file_created(path)
 
     def _file_created(self, msg):
         """Handle a newly created file — build and write metadata."""

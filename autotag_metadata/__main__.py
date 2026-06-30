@@ -1,3 +1,5 @@
+"""Package entry point — sets the desktop app process ID and launches the GUI."""
+
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -18,7 +20,7 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
-import sys
+import sys  # noqa: I001
 
 from autotag_metadata import app
 

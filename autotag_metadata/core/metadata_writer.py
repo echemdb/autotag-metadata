@@ -21,8 +21,8 @@
 
 import hashlib
 import logging
-import os
 import time
+from pathlib import Path
 
 import yaml
 
@@ -70,7 +70,7 @@ def build_metadata(filepath, parameters):
     import datetime
 
     parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    parameters["measurement file name"] = os.path.split(filepath)[-1]
+    parameters["measurement file name"] = Path(filepath).name
 
     hash_str = hash_file(filepath)
     if hash_str is None:

@@ -1,6 +1,4 @@
-"""
-Treeview of the template dictionary
-"""
+"""Tree view widget for displaying and editing YAML metadata as key-value pairs."""
 
 # ********************************************************************
 #  This file is part of autotag-metadata.
@@ -22,13 +20,16 @@ Treeview of the template dictionary
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 from collections import deque
+from typing import Optional
 
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
 
 class TemplateTree(QWidget):
-    def __init__(self, data):
+    """Tree widget for viewing and editing a nested dict as a key/value/type table."""
+
+    def __init__(self, data: dict):
         super(TemplateTree, self).__init__()
         self.tree = QTreeView(self)
 
@@ -40,7 +41,7 @@ class TemplateTree(QWidget):
         self.tree.setModel(self.model)
         self.import_from_dict(data)
 
-    def import_from_dict(self, data, root=None):
+    def import_from_dict(self, data: dict, root: Optional[QStandardItem] = None) -> None:
         self.model.setRowCount(0)
         if root is None:
             root = self.model.invisibleRootItem()
@@ -68,7 +69,7 @@ class TemplateTree(QWidget):
             available_parents[id] = parent.child(parent.rowCount() - 1)
         self.tree.expandAll()
 
-    def dict_to_model(self, dictionary: dict, parent_id=None) -> list:
+    def dict_to_model(self, dictionary: dict, parent_id: Optional[int] = None) -> list[dict]:
         items = []
         if parent_id is None:
             parent_id = 0
@@ -111,7 +112,7 @@ class TemplateTree(QWidget):
             id += 1
         return items
 
-    def list_to_model(self, dict_list: list, parent_id=None) -> list:
+    def list_to_model(self, dict_list: list, parent_id: Optional[int] = None) -> list[dict]:
         items = []
         if parent_id is None:
             parent_id = 0
@@ -154,10 +155,11 @@ class TemplateTree(QWidget):
             id += 1
         return items
 
-    def to_dict(self):
+    def to_dict(self) -> Optional[dict]:
+        """Return the current tree contents as a nested dict."""
         return self.recurse_items(self.model)
 
-    def recurse_items(self, item, item_type=None):
+    def recurse_items(self, item, item_type: Optional[str] = None):
         if item is not None:
             if item.hasChildren():
                 temp_dict = {}
