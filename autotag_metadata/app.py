@@ -1,4 +1,4 @@
-"""Autotag Metadata App"""
+"""Autotag Metadata App — main window and application entry point."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -20,56 +20,19 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-import datetime
-import hashlib
 import logging
 import os
 import sys
 
-import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
-from yamllint import linter
 
 from .config import Config
+from .core.metadata_writer import build_metadata, write_metadata
+from .core.yaml_utils import dump_yaml, dump_yaml_to_file, parse_yaml, validate_yaml_syntax
 from .file_handling import FileMonitor
 from .ui.logger import LogHandler
 from .ui.template_dialog import TemplateDialog, TemplateDialogType
 from .ui.templatetree import TemplateTree
-
-yaml_config_str = """---
-
-yaml-files:
-  - "*.yaml"
-  - "*.yml"
-  - ".yamllint"
-
-rules:
-  braces: enable
-  brackets: enable
-  colons: enable
-  commas: enable
-  comments:
-    level: warning
-  comments-indentation:
-    level: warning
-  document-end: disable
-  document-start:
-    level: warning
-  empty-lines: enable
-  empty-values: disable
-  hyphens: enable
-  indentation: enable
-  key-duplicates: enable
-  key-ordering: disable
-  line-length: enable
-  new-line-at-end-of-file: enable
-  new-lines: enable
-  octal-values: disable
-  quoted-strings: disable
-  trailing-spaces: enable
-  truthy:
-    level: warning"""
-
 
 logger = logging.getLogger(__name__)
 
@@ -78,220 +41,247 @@ dir_path = os.path.dirname(path)
 
 
 class AutotagApp(QtWidgets.QMainWindow):
-    """Main window class"""
+    """Main window — thin UI controller that delegates to core modules."""
 
     def __init__(self, *args, **kwargs):
         super(AutotagApp, self).__init__(*args, **kwargs)
         uic.loadUi(f"{dir_path}/ui/main_window.ui", self)
 
-        # set window title and icon
-        title = "Autotag Metadata"
-        self.setWindowTitle(title)
+        self.setWindowTitle("Autotag Metadata")
         icon = QtGui.QIcon()
         icon.addPixmap(
-            QtGui.QPixmap(f"{os.path.abspath(os.path.dirname(__file__))}/autotag_metadata.png"),
+            QtGui.QPixmap(f"{dir_path}/autotag_metadata.png"),
             QtGui.QIcon.Mode.Selected,
             QtGui.QIcon.State.On,
         )
         self.setWindowIcon(icon)
 
-        self.setup_logger()
+        self._setup_logger()
         self.config = Config()
 
+        # signal wiring
         self.btnSelectTemporaryFile.clicked.connect(self.select_temporary_file)
         self.btnUseTemporaryFile.clicked.connect(self.toggle_watch_temporary_file)
         self.btnUseTemporaryFile.setDisabled(True)
-        self.ledTemporaryLoc.textChanged.connect(self.enable_use)
+        self.ledTemporaryLoc.textChanged.connect(self._enable_use)
         self.btnBrowse.clicked.connect(self.browse_folder)
         self.btnActivate.clicked.connect(self.toggle_watch)
         self.btnStore.clicked.connect(self.store_template)
         self.btnLoad.clicked.connect(self.load_template)
 
         self.template_tree = TemplateTree({})
-        self.template_tree.model.dataChanged.connect(self.on_tree_data_change)
+        self.template_tree.model.dataChanged.connect(self._on_tree_data_change)
         self.scrollArea.setWidget(self.template_tree)
 
-        self.label_dropzone.files_submitted.connect(self._on_files_submitted)
-
-        self.ledFolder.textChanged.connect(self.enable_activate)
+        self.ledFolder.textChanged.connect(self._enable_activate)
         self.btnActivate.setDisabled(True)
-        self.yamlText.textChanged.connect(self.act_on_yaml_change)
+        self.yamlText.textChanged.connect(self._act_on_yaml_change)
         self.parameters = {}
 
-        try:
-            self.setGeometry(*self.config._config["windowGeometry"])
-            self.ledFolder.setText(self.config._config["watchFolder"])
-            self.ledTemporaryLoc.setText(self.config._config["temporaryFile"])
-            self.ledFilePatterns.setText(self.config._config["filePatterns"])
-            self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
-        except KeyError:
-            logger.warning("Some config keys missing — using defaults")
+        self._restore_settings()
 
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.reenable_temporary_file_watch)
+        self._temporary_write_timer = QtCore.QTimer()
+        self._temporary_write_timer.timeout.connect(self._reenable_temporary_file_watch)
+
+    # -- settings persistence ----------------------------------------------
+
+    def _restore_settings(self):
+        """Populate widgets from saved config (tolerant of missing keys)."""
+        geom = self.config.window_geometry
+        if geom is not None:
+            self.setGeometry(*geom)
+        if self.config.watch_folder:
+            self.ledFolder.setText(self.config.watch_folder)
+        if self.config.temporary_file:
+            self.ledTemporaryLoc.setText(self.config.temporary_file)
+        if self.config.file_patterns:
+            self.ledFilePatterns.setText(self.config.file_patterns)
+        self.cbRecursiveWatch.setChecked(self.config.recursive_watching)
+
+    def closeEvent(self, event):
+        self.config.window_geometry = self.frameGeometry().getCoords()
+        self.config.watch_folder = self.ledFolder.text()
+        self.config.temporary_file = self.ledTemporaryLoc.text()
+        self.config.file_patterns = self.ledFilePatterns.text()
+        self.config.recursive_watching = self.cbRecursiveWatch.isChecked()
+        self.config.save_settings()
+
+        super().closeEvent(event)
+        logging.getLogger().removeHandler(self._log_handler)
+
+    # -- tree / yaml synchronization ---------------------------------------
 
     @QtCore.pyqtSlot()
-    def on_tree_data_change(self):
+    def _on_tree_data_change(self):
         mask_dict = self.template_tree.to_dict()
         if mask_dict:
             self.parameters = mask_dict
-            self.populate_yamltextfield()
+            self._populate_yamltextfield()
         else:
-            self.populate_mask()
+            self._populate_mask()
             logger.error("Value types can not be changed in the mask. Please use the text field or editor.")
 
-    def validate_yaml(self):
-        """Change color of raw yaml text field according to validation"""
-        # yaml_error = linter.run(self.yamlText.toPlainText(),
-        # config.YamlLintConfig(content=yaml_config_str))
-        yaml_error = linter.get_syntax_error(self.yamlText.toPlainText())
-        if yaml_error is None:
+    def _validate_yaml(self):
+        """Validate the raw YAML text field and color it accordingly."""
+        error = validate_yaml_syntax(self.yamlText.toPlainText())
+        if error is None:
             self.yamlText.setStyleSheet("background-color: rgb(144, 238, 144);")
             return True
         else:
             self.yamlText.setStyleSheet("background-color: rgb(255, 106, 106);")
             return False
 
-    def act_on_yaml_change(self):
-        """Update mask on change in raw yaml text field"""
-        if self.validate_yaml():
-            self.parameters = yaml.safe_load(self.yamlText.toPlainText())
+    def _act_on_yaml_change(self):
+        """Update mask on change in raw yaml text field."""
+        if self._validate_yaml():
+            self.parameters = parse_yaml(self.yamlText.toPlainText())
             if isinstance(self.parameters, dict):
-                self.populate_mask()
+                self._populate_mask()
                 if self.btnUseTemporaryFile.isChecked():
-                    self.hidden_write_temporary_file()
+                    self._hidden_write_temporary_file()
+
+    def _populate_yamltextfield(self):
+        """Sync the raw YAML text field from the parameters dict."""
+        # blocking of signals necessary to prevent regeneration of mask
+        # which leads to a loss of focus of the currently edited mask field
+        self.yamlText.blockSignals(True)
+        self.yamlText.setPlainText(dump_yaml(self.parameters))
+        self.yamlText.blockSignals(False)
+
+    def _populate_mask(self):
+        """Generate input tree from parameters dict."""
+        self.template_tree.import_from_dict(self.parameters)
+
+    # -- template management -----------------------------------------------
 
     def load_template(self):
-        """Open the dialog for loading templates"""
+        """Open the dialog for loading templates."""
         template_dialog = TemplateDialog(TemplateDialogType.Load)
-        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
+        template_dialog.listWidget.addItems(self.config.template_names)
 
         if template_dialog.exec():
             yaml_text = self.config.load_template(template_dialog.template_name)
-            self.parameters = yaml.safe_load(yaml_text)
-            self.populate_yamltextfield()
-            self.populate_mask()
+            self.parameters = parse_yaml(yaml_text)
+            self._populate_yamltextfield()
+            self._populate_mask()
 
     def store_template(self):
-        """Open the dialog for storing templates"""
+        """Open the dialog for storing templates."""
         template_dialog = TemplateDialog(TemplateDialogType.Store)
-        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
+        template_dialog.listWidget.addItems(self.config.template_names)
 
         content = self.yamlText.toPlainText()
-
         if template_dialog.exec():
             self.config.save_template(template_dialog.template_name, content)
 
-    def select_temporary_file(self):
-        """Open the dialog for selecting the temporary to be watched"""
-        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
+    # -- temporary file management -----------------------------------------
 
-        if temporary_file:  # if user didn't pick a directory don't continue
+    def select_temporary_file(self):
+        """Open a file dialog to select the temporary YAML file."""
+        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
+        if temporary_file:
             self.ledTemporaryLoc.setText(temporary_file)
-            self.write_temporary_file()
+            self._write_temporary_file()
             logger.info("changed temporary file to %s", temporary_file)
 
     def toggle_watch_temporary_file(self):
-        """Toggle temporary file watching"""
+        """Toggle temporary file watching."""
         temporary_file = self.ledTemporaryLoc.text()
         if self.btnUseTemporaryFile.isChecked():
             if temporary_file:
-                # create new instance of watcher potential
-                splitted = os.path.split(temporary_file)
-                path = os.path.join(*splitted[:-1])
-                file = splitted[-1]
-                self.temporary_file_monitor = FileMonitor(patterns=[file])
-                self.thread_temporary_file = QtCore.QThread(self)
-                self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
-                self.temporary_file_monitor.moveToThread(self.thread_temporary_file)
+                directory, filename = os.path.split(temporary_file)
+                self._temporary_file_monitor = FileMonitor(patterns=[filename])
+                self._temporary_file_monitor.getEmitter().modify_signal.connect(self._temporary_file_changed)
 
                 self.btnUseTemporaryFile.setText("Do not use")
-                self.temporary_file_monitor.observer.schedule(
-                    self.temporary_file_monitor.event_handler, path, recursive=False
-                )  # permission problems with subfolders
-                self.temporary_file_monitor.observer.start()
+                self._temporary_file_monitor.observer.schedule(
+                    self._temporary_file_monitor.event_handler, directory, recursive=False
+                )
+                self._temporary_file_monitor.observer.start()
                 logger.info("watching %s", temporary_file)
             else:
                 self.btnUseTemporaryFile.setChecked(False)
 
         elif not self.btnUseTemporaryFile.isChecked():
             self.btnUseTemporaryFile.setText("Use")
-            self.temporary_file_monitor.observer.stop()
-
+            self._temporary_file_monitor.observer.stop()
             logger.info("stop watching %s", temporary_file)
 
-    def temporary_file_changed(self):
+    def _temporary_file_changed(self):
         with open(self.ledTemporaryLoc.text()) as f:
-            self.parameters = yaml.safe_load(f.read())
+            self.parameters = parse_yaml(f.read())
         if self.parameters is None:
             self.parameters = {}
-        self.populate_yamltextfield()
-        self.populate_mask()
+        self._populate_yamltextfield()
+        self._populate_mask()
 
-    def write_temporary_file(self):
-        with open(self.ledTemporaryLoc.text(), "w", encoding="utf-8") as metadata_file:
-            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
+    def _write_temporary_file(self):
+        dump_yaml_to_file(self.parameters, self.ledTemporaryLoc.text())
 
-    def hidden_write_temporary_file(self):
-        # prevent unintended reload
-        if not self.timer.isActive():
-            self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
-        self.write_temporary_file()
-        self.timer.start(1000)
+    def _hidden_write_temporary_file(self):
+        """Write the temporary file while suppressing the file-change signal."""
+        if not self._temporary_write_timer.isActive():
+            self._temporary_file_monitor.getEmitter().modify_signal.disconnect()
+        self._write_temporary_file()
+        self._temporary_write_timer.start(1000)
 
     @QtCore.pyqtSlot()
-    def reenable_temporary_file_watch(self):
-        self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
-        self.timer.stop()
+    def _reenable_temporary_file_watch(self):
+        self._temporary_file_monitor.getEmitter().modify_signal.connect(self._temporary_file_changed)
+        self._temporary_write_timer.stop()
 
-    def enable_use(self):
-        """Enable use button"""
+    def _enable_use(self):
+        """Enable the 'Use' button when the temporary file path is valid."""
         if os.path.exists(self.ledTemporaryLoc.text()):
             self.btnUseTemporaryFile.setEnabled(True)
         else:
             self.btnUseTemporaryFile.setDisabled(True)
 
+    # -- folder watching ---------------------------------------------------
+
     def browse_folder(self):
-        """Open the dialog for selecting the folder to be watched"""
+        """Open a directory picker for the watched folder."""
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")
         directory = os.sep.join(directory.split("/"))
-        if directory:  # if user didn't pick a directory don't continue
+        if directory:
             self.ledFolder.setText(directory)
             logger.info("changed watching folder to %s", directory)
 
-    def enable_activate(self):
-        """Enable activate button"""
+    def _enable_activate(self):
+        """Enable the Activate button when the folder path is valid."""
         if os.path.exists(self.ledFolder.text()):
             self.btnActivate.setEnabled(True)
         else:
             self.btnActivate.setDisabled(True)
 
     def toggle_watch(self):
-        """Toggle folder watching"""
+        """Toggle folder watching."""
         watch_directory = self.ledFolder.text()
         if self.btnActivate.isChecked():
             if watch_directory:
                 self.ledFolder.setDisabled(True)
                 self.ledFilePatterns.setDisabled(True)
                 self.cbRecursiveWatch.setDisabled(True)
-                # create new instance of watcher potential
+
                 if self.ledFilePatterns.text() == "":
                     patterns = None
                 else:
                     patterns = [p.strip() for p in self.ledFilePatterns.text().split(",")]
-                self.file_monitor = FileMonitor(watch_directory, patterns=patterns)
-                self.file_monitor.create_signal.connect(self.file_created)
+
+                self._file_monitor = FileMonitor(watch_directory, patterns=patterns)
+                self._file_monitor.create_signal.connect(self._file_created)
 
                 self.btnActivate.setText("Deactivate")
-                self.file_monitor.start()
+                self._file_monitor.start()
+
                 logger.info("watching %s", watch_directory)
             else:
                 self.btnActivate.setChecked(False)
 
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
-            self.file_monitor.stop()
-            self.file_monitor.wait()
+            self._file_monitor.stop()
+            self._file_monitor.wait()
             self.ledFolder.setEnabled(True)
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
@@ -302,84 +292,28 @@ class AutotagApp(QtWidgets.QMainWindow):
         for path in paths:
             self.file_created(path)
 
-    def file_created(self, msg):
-        """Create the metadata file with timestamp and hash."""
+    def _file_created(self, msg):
+        """Handle a newly created file — build and write metadata."""
         if not msg.endswith(".meta.yaml"):
             logger.info("created %s", msg)
-            self.parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-            self.parameters["measurement file name"] = os.path.split(msg)[-1]
+            result = build_metadata(msg, self.parameters)
+            if result is not None:
+                write_metadata(msg, self.parameters)
 
-            hash_str = self.hash_file(msg)
-            if hash_str is None:
-                logger.error("Skipping metadata for %s — hashing failed", msg)
-                return
-            self.parameters["measurement file sha512"] = hash_str
+    # -- logging -----------------------------------------------------------
 
-            self.write_metadata(msg)
-
-    def hash_file(self, filename, max_retries=5, retry_delay=1.0):
-        """Generate sha512 hash of the measurement file.
-
-        Retries up to ``max_retries`` times when the file is still locked or
-        not yet fully written to disk.
-        """
-        for attempt in range(1, max_retries + 1):
-            try:
-                sha512_hash = hashlib.sha512()
-                with open(filename, "rb") as file:
-                    for byte_block in iter(lambda: file.read(4096), b""):
-                        sha512_hash.update(byte_block)
-                return sha512_hash.hexdigest()
-            except (PermissionError, FileNotFoundError) as err:
-                if attempt < max_retries:
-                    logger.warning("Attempt %d/%d — cannot read %s: %s", attempt, max_retries, filename, err)
-                    QtCore.QThread.msleep(int(retry_delay * 1000))
-                else:
-                    logger.error("Failed to hash %s after %d attempts: %s", filename, max_retries, err)
-                    return None
-
-    def populate_yamltextfield(self):
-        """Change the text of the raw yaml field when field text is changed in the mask"""
-        # blocking of signals necessary to prevent regeneration of mask
-        # which leads to a loss of focus of the currently edited mask field
-        self.yamlText.blockSignals(True)
-        self.yamlText.setPlainText(yaml.dump(self.parameters, sort_keys=False, allow_unicode=True))
-        self.yamlText.blockSignals(False)
-
-    def populate_mask(self):
-        """Generate input tree from parameters dict"""
-        self.template_tree.import_from_dict(self.parameters)
-
-    def write_metadata(self, file):
-        """Write out metadata in file with file name corresponding to measurement file"""
-        with open(file + ".meta.yaml", "w", encoding="utf-8") as metadata_file:
-            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
-        logger.info("wrote metadata for %s", file + ".meta.yaml")
-
-    def setup_logger(self):
-        self.log_handler = LogHandler(self)
-        self.log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-        logging.getLogger().addHandler(self.log_handler)
-        self.log_handler.new_record.connect(self.pteLogging.appendPlainText)
+    def _setup_logger(self):
+        self._log_handler = LogHandler(self)
+        self._log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        logging.getLogger().addHandler(self._log_handler)
+        self._log_handler.new_record.connect(self.pteLogging.appendPlainText)
         self.pteLogging.setReadOnly(True)
-        # logging level
         logging.getLogger().setLevel(logging.INFO)
         logger.info("Starting autotag-metadata")
 
-    def closeEvent(self, event):
-        self.config._config["windowGeometry"] = self.frameGeometry().getCoords()
-        self.config._config["watchFolder"] = self.ledFolder.text()
-        self.config._config["temporaryFile"] = self.ledTemporaryLoc.text()
-        self.config._config["filePatterns"] = self.ledFilePatterns.text()
-        self.config._config["recursiveWatching"] = self.cbRecursiveWatch.isChecked()
-        self.config.save_settings()
-
-        super().closeEvent(event)
-        logging.getLogger().removeHandler(self.log_handler)
-
 
 def run():
-    """Start Application"""
+    """Start Application."""
     app = QtWidgets.QApplication(sys.argv)
     form = AutotagApp()
     form.show()

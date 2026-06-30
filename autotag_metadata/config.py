@@ -1,4 +1,4 @@
-"""Config module"""
+"""Config module — persistent application settings and template management."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -45,10 +45,9 @@ logger = logging.getLogger(__name__)
 
 
 class Config:
-    "Config class for autotag-metadata"
+    """Persistent application configuration backed by a TOML file."""
 
     def __init__(self) -> None:
-        ""
         self._config_path = os.path.join(appdata_path, "config.toml")
         if os.path.exists(self._config_path):
             with open(self._config_path, "r") as f:
@@ -58,23 +57,78 @@ class Config:
         else:
             self._config = {"templates": {}}
 
+    # -- property accessors for UI settings --------------------------------
+
+    @property
+    def window_geometry(self):
+        """Window position/size as a tuple, or ``None``."""
+        return self._config.get("windowGeometry")
+
+    @window_geometry.setter
+    def window_geometry(self, value):
+        self._config["windowGeometry"] = value
+
+    @property
+    def watch_folder(self) -> str:
+        """Last watched folder path."""
+        return self._config.get("watchFolder", "")
+
+    @watch_folder.setter
+    def watch_folder(self, value: str):
+        self._config["watchFolder"] = value
+
+    @property
+    def temporary_file(self) -> str:
+        """Path to the temporary YAML file."""
+        return self._config.get("temporaryFile", "")
+
+    @temporary_file.setter
+    def temporary_file(self, value: str):
+        self._config["temporaryFile"] = value
+
+    @property
+    def file_patterns(self) -> str:
+        """Comma-separated file pattern string."""
+        return self._config.get("filePatterns", "")
+
+    @file_patterns.setter
+    def file_patterns(self, value: str):
+        self._config["filePatterns"] = value
+
+    @property
+    def recursive_watching(self) -> bool:
+        """Whether to watch subdirectories recursively."""
+        return bool(self._config.get("recursiveWatching", False))
+
+    @recursive_watching.setter
+    def recursive_watching(self, value: bool):
+        self._config["recursiveWatching"] = value
+
+    @property
+    def template_names(self) -> list[str]:
+        """List of stored template names."""
+        return list(self._config.get("templates", {}).keys())
+
+    # -- persistence -------------------------------------------------------
+
     def save_settings(self) -> None:
+        """Write current config to disk."""
         self._write_config()
 
     def _write_config(self) -> None:
-        ""
         with open(self._config_path, "w") as f:
             toml.dump(self._config, f)
 
+    # -- template management -----------------------------------------------
+
     def load_template(self, name: str) -> str:
-        ""
+        """Read and return template content by *name*."""
         with open(os.path.join(templates_path, self._config["templates"][name])) as f:
             return f.read()
 
     def save_template(self, name: str, content: str) -> None:
-        ""
+        """Save *content* as a template under *name*."""
         file_path = os.path.join(templates_path, name + ".yaml")
-
         with open(file_path, "w") as f:
             f.write(content)
         self._config["templates"][name] = name + ".yaml"

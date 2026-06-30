@@ -21,7 +21,7 @@ version = "0.1.0"
 repository = "https://github.com/echemdb/autotag-metadata"
 
 [tool.setuptools]
-packages = ["autotag_metadata",]
+packages = ["autotag_metadata", "autotag_metadata.core", "autotag_metadata.ui"]
 include-package-data = true
 
 [tool.setuptools.package-data]
