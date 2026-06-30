@@ -60,17 +60,22 @@ Tests run against Python 3.10–3.14. For headless environments set
 ```
 autotag_metadata/
     __main__.py          entry point
-    app.py               UI controller — thin QMainWindow subclass
-    config.py            typed property accessors over a TOML config file
-    file_handling.py     filesystem monitoring via watchdog
-    core/
-        metadata_writer.py   file hashing + .meta.yaml writing (no Qt)
-        yaml_utils.py        YAML parse / validate / dump (no Qt)
+    app.py               UI controller — QMainWindow that builds the toolbar/dock chrome
+    config.py            typed accessors over a TOML config file; stores templates/snippets/views
+    file_handling.py     filesystem monitoring via watchfiles
+    core/                (no Qt)
+        metadata_writer.py   file hashing + .meta.yaml writing
+        yaml_utils.py        YAML parse / validate / dump
+        yaml_document.py     subtree get/set + path-anchored snippet merging
     ui/
-        templatetree.py, template_dialog.py, logger.py, *.ui
+        yaml_multiview.py, zoom_view.py, yaml_form_view.py   tiling form editor
+        yamltextedit.py, yaml_highlighter.py                 raw YAML editor + highlighting
+        library_panel.py, editable_list.py, snippetslist.py  snippets/templates/views sidebars
+        labeldropzone.py, drop_overlay.py, logger.py, *.ui
 tests/
     test_config.py, test_metadata_writer.py, test_yaml_utils.py,
-    test_templatetree.py, test_integration.py
+    test_yaml_document.py, test_templatetree.py, test_file_handling.py,
+    test_integration.py
 ```
 
 `core/` modules have no Qt dependency and can be tested without a running application.

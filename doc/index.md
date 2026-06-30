@@ -15,7 +15,7 @@ kernelspec:
 Welcome to autotag-metadata's documentation!
 ===================================
 
-Autotag-metadata allows automatic creation of metadata files upon file creation. The input metadata file can be added in a simple GUI or from template YAML files.
+Autotag-metadata allows automatic creation of metadata files upon file creation. The input metadata is entered in a simple GUI — as raw YAML or through a structured form — and can be assembled from reusable templates and snippets.
 The program was originally developed to create metadata files for experimental data acquired in a laboratory. However, it can be used in any process where files are generated in the file system and the attachment of additional metadata is desired.
 
 Input and output metadata files are currently in YAML, which can easily be converted in any other kinds of formats such as JSON, XML, ...
@@ -48,7 +48,7 @@ fruit:
   supplier: Banana corp.
 ```
 
-When autotag-metadata is active when `banana.csv` is generated, a new file `banana.csv.meta.yaml` is written in the same folder, which contains the pre-defined set of metadata. The next measurement is supposed to be done at 320 K. In that case, while autotag-metadata is still running, we change in the mask of the programm the temperature from 300 to 320 K. Once the next file is created, here `banana2.csv` the newly created `banana2.csv.meta.yaml` will contain the updated temperature.
+When autotag-metadata is active when `banana.csv` is generated, a new file `banana.csv.meta.yaml` is written in the same folder, which contains the pre-defined set of metadata. The next measurement is supposed to be done at 320 K. In that case, while autotag-metadata is still running, we change the temperature from 300 to 320 K in the editor (in either the form or the raw YAML view). Once the next file is created, here `banana2.csv`, the newly created `banana2.csv.meta.yaml` will contain the updated temperature.
 
 An elaborate metadata file for an electrochemistry experiment can be found [echemdbs' metadata schema](https://github.com/echemdb/metadata-schema/blob/main/examples/file_schemas/autotag.yaml) repository.
 

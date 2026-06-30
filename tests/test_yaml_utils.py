@@ -4,7 +4,41 @@ from autotag_metadata.core.yaml_utils import (
     dump_yaml_to_file,
     parse_yaml,
     validate_yaml_syntax,
+    yaml_ancestor_path,
 )
+
+
+DOC = (
+    "electrochemical system:\n"
+    "  electrolyte:\n"
+    "    type: aq\n"
+    "    components:\n"
+    "    - name: water\n"
+    "      sum formula: H2O\n"
+    "    - name: sulfuric acid\n"
+    "      type: acid\n"
+)
+
+
+def test_ancestor_path_mapping_selection():
+    assert yaml_ancestor_path(DOC, 2, 2) == "electrochemical system.electrolyte"
+
+
+def test_ancestor_path_same_indent_sequence_full_list():
+    # Selecting the whole component list anchors under "components", not the
+    # parent mapping — the items are level-indented with the key.
+    assert yaml_ancestor_path(DOC, 4, 7) == "electrochemical system.electrolyte.components"
+
+
+def test_ancestor_path_same_indent_sequence_single_item_with_sibling_above():
+    # Selecting only the second item must still find "components" past the
+    # preceding sibling item.
+    assert yaml_ancestor_path(DOC, 6, 7) == "electrochemical system.electrolyte.components"
+
+
+def test_ancestor_path_indented_sequence_style():
+    doc = "e:\n  c:\n    - name: water\n    - name: acid\n"
+    assert yaml_ancestor_path(doc, 2, 3) == "e.c"
 
 
 def test_validate_yaml_syntax_valid():

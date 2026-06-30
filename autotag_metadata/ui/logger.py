@@ -2,7 +2,7 @@
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
-#        Copyright (C) 2024 Johannes Hermann
+#        Copyright (C) 2024-2026 Johannes Hermann
 #
 #  autotag-metadata is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -26,16 +26,31 @@ from PyQt6.QtCore import QObject, pyqtSignal
 logger = logging.getLogger(__name__)
 
 
-class LogHandler(QObject, logging.Handler):
-    """Logging handler that emits formatted records as Qt signals."""
+class _RecordEmitter(QObject):
+    """Tiny QObject that owns the Qt signal carrying formatted log records."""
 
     new_record = pyqtSignal(object)
 
-    def __init__(self, parent):
-        super().__init__(parent)
-        super(logging.Handler).__init__()
+
+class LogHandler(logging.Handler):
+    """Logging handler that re-emits formatted records as a Qt signal.
+
+    The handler itself is a plain ``logging.Handler`` (no Qt base class); the
+    Qt signal lives on a contained ``QObject``. This matters at shutdown:
+    ``logging.shutdown()`` iterates every handler, and if the handler were a
+    QObject whose C++ peer had already been torn down with the QApplication, the
+    attribute access would raise. Keeping the handler pure-Python avoids that.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__()
+        self._emitter = _RecordEmitter(parent)
+        self.new_record = self._emitter.new_record
         logger.info("Starting logger")
 
     def emit(self, record):
-        msg = self.format(record)
-        self.new_record.emit(msg)
+        try:
+            self.new_record.emit(self.format(record))
+        except RuntimeError:
+            # The emitter's C++ object was deleted during teardown; drop it.
+            pass

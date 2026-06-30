@@ -1,8 +1,8 @@
-"""Filesystem monitoring — event handler and observer lifecycle management."""
+"""Filesystem monitoring — watchfiles-based watcher with a callback API."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
-#        Copyright (C) 2021-2022 Johannes Hermann
+#        Copyright (C) 2021-2026 Johannes Hermann
 #
 #  autotag-metadata is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -20,8 +20,8 @@
 # ********************************************************************
 
 import fnmatch
+import os
 import threading
-from typing import Optional
 
 from PyQt6 import QtCore
 from watchfiles import Change, watch
@@ -33,7 +33,7 @@ class FileMonitor(QtCore.QThread):
     create_signal = QtCore.pyqtSignal(str)
     modify_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, path: str, patterns: Optional[list[str]] = None) -> None:
+    def __init__(self, path: str, patterns: list[str] | None = None) -> None:
         super().__init__()
         self.path = path
         self.patterns = patterns
@@ -42,15 +42,18 @@ class FileMonitor(QtCore.QThread):
     def stop(self) -> None:
         self._stop_event.set()
 
+    def _matches(self, file_path: str) -> bool:
+        if self.patterns is None:
+            return True
+        name = os.path.basename(file_path)
+        return any(fnmatch.fnmatch(name, pat) for pat in self.patterns)
+
     def run(self) -> None:
         for changes in watch(self.path, stop_event=self._stop_event):
             for change, file_path in changes:
                 file_path = str(file_path)
-
-                if self.patterns:
-                    if not any(fnmatch.fnmatch(file_path, p) for p in self.patterns):
-                        continue
-
+                if not self._matches(file_path):
+                    continue
                 if change == Change.added:
                     self.create_signal.emit(file_path)
                 elif change == Change.modified:
