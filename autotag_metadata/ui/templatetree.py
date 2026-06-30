@@ -46,8 +46,7 @@ class TemplateTree(QWidget):
         if root is None:
             root = self.model.invisibleRootItem()
         available_parents = {}
-        data = self.dict_to_model(data)
-        values = deque(data)
+        values = deque(self.dict_to_model(data))
         while values:
             value = values.popleft()
 

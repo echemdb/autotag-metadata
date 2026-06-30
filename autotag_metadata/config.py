@@ -23,6 +23,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import toml
 
@@ -48,6 +49,7 @@ class Config:
 
     def __init__(self) -> None:
         self._config_path = appdata_path / "config.toml"
+        self._config: dict[str, Any]
         if self._config_path.exists():
             with open(self._config_path) as f:
                 self._config = toml.load(f)

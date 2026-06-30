@@ -83,16 +83,15 @@ pytest-xdist = "*"
 doctest = "pytest --doctest-modules autotag_metadata tests/"
 
 [tool.pixi.feature.lint.dependencies]
-mypy = "*"
 ruff = "*"
-types-pyyaml = "*"
-types-toml = "*"
+ty = "*"
 
 [tool.pixi.feature.lint.tasks]
 pylint = "ruff check autotag_metadata"
 black = "ruff format autotag_metadata"
 isort = "ruff check --select I autotag_metadata"
-lint = { depends-on = ["pylint", "black", "isort"]  }
+typecheck = "ty check autotag_metadata"
+lint = { depends-on = ["pylint", "black", "isort", "typecheck"]  }
 
 [tool.pixi.feature.doc.dependencies]
 jupytext = "*"
@@ -126,6 +125,12 @@ lint.ignore = [
 ]
 lint.fixable = ["E", "F", "W", "B"]
 line-length = 115
+
+[tool.ty.rules]
+# PyQt6 (conda-forge) ships compiled extension modules with no type stubs, so
+# every `from PyQt6 import ...` is statically unresolvable. The imports are valid
+# at runtime; silence the noise rather than littering per-line ignores.
+unresolved-import = "ignore"
 
 [project.scripts]
 autotag_metadata = "desktop_app:entry_point"
