@@ -156,6 +156,15 @@ class Config:
         self._config.pop("multiviewPaths", None)
 
     @property
+    def tour_seen(self) -> bool:
+        """Whether the first-run guided tour has been shown/dismissed."""
+        return bool(self._config.get("tourSeen", False))
+
+    @tour_seen.setter
+    def tour_seen(self, value: bool):
+        self._config["tourSeen"] = value
+
+    @property
     def template_names(self) -> list[str]:
         """List of stored template names."""
         return list(self._config.get("templates", {}).keys())

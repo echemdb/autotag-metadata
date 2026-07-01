@@ -37,6 +37,7 @@ from .ui.label_dropzone import LabelDropzone
 from .ui.library_panel import LibraryPanel
 from .ui.logger import LogHandler
 from .ui.snippets_list import SnippetsListView
+from .ui.tour import TourOverlay, TourStep
 from .ui.yaml_multi_view import YamlMultiView
 from .ui.zoom_panels import ZoomFormView, ZoomTextView
 
@@ -138,6 +139,108 @@ class AutotagApp(QtWidgets.QMainWindow):
         self._temporary_write_timer = QtCore.QTimer()
         self._temporary_write_timer.timeout.connect(self._reenable_temporary_file_watch)
 
+        self._tour: TourOverlay | None = None
+        if not self.config.tour_seen:
+            # Defer until the window is shown so widget geometry is settled.
+            QtCore.QTimer.singleShot(0, self._start_tour)
+
+    # -- guided tour -------------------------------------------------------
+
+    def _start_tour(self) -> None:
+        """Launch the coach-mark tour over the live chrome."""
+        if self._tour is not None:
+            return
+        self.config.tour_seen = True
+        self._tour = TourOverlay(self, self._build_tour_steps())
+        self._tour.finished.connect(self._on_tour_finished)
+        self._tour.start()
+
+    def _on_tour_finished(self) -> None:
+        self._tour = None
+
+    def _reveal_dropzone(self) -> None:
+        """Show the drop-files dock so the tour can highlight it."""
+        self._dropzone_dock.show()
+        self._dropzone_dock.raise_()
+
+    def _build_tour_steps(self) -> list[TourStep]:
+        """Steps pointing at the real toolbar/editor/library chrome."""
+        sidebar_btn = self._toolbar.widgetForAction(self._act_sidebar)
+        dropzone_btn = self._toolbar.widgetForAction(self._dropzone_toggle)
+        return [
+            TourStep(
+                "Welcome to Autotag Metadata",
+                "This tool watches a folder and writes a <code>.meta.yaml</code> sidecar next to "
+                "every new file, using the metadata you prepare here. Let's walk through it.",
+            ),
+            TourStep(
+                "1. Choose a folder to watch",
+                "Pick the folder to watch with <b>Browse…</b>, then press <b>Activate</b>. While "
+                "active, every new file in it is tagged with your metadata.",
+                [self.ledFolder, self.btnBrowse, self.btnActivate],
+            ),
+            TourStep(
+                "2. Filter which files",
+                "Restrict tagging to matching files with comma-separated globs "
+                "(e.g. <code>*.csv,*.tsv</code>), and tick <b>Recursive</b> to include sub-folders.",
+                [self.ledFilePatterns, self.cbRecursiveWatch],
+            ),
+            TourStep(
+                "3.1 Switch between views",
+                "Edit metadata as a structured <b>Form</b> or as raw <b>YAML</b>. These tabs switch "
+                "between the two — both edit the same document, so you can move freely between them.",
+                [self._view_tabs],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_FORM),
+            ),
+            TourStep(
+                "3.2 The Form editor",
+                "The Form shows your metadata as fields. It is a tiling multi-view: split a panel "
+                "and zoom each onto a different path (with the <b>⤢</b> buttons) to edit distant "
+                "fields side by side.",
+                [self._form_multiview],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_FORM),
+            ),
+            TourStep(
+                "3.3 The YAML editor",
+                "The YAML tab is the same document as raw text, with syntax highlighting. Its tab "
+                "label turns green when the YAML is valid and red when it is not.",
+                [self._text_multiview],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_YAML),
+            ),
+            TourStep(
+                "4.1 Open the Library",
+                "This <b>☰ Library</b> button shows or hides the library sidebar of reusable "
+                "Snippets, Templates, and Views.",
+                [sidebar_btn],
+                on_enter=lambda: self._act_sidebar.setChecked(True),
+            ),
+            TourStep(
+                "4.2 The Library panel",
+                "The Library holds <b>Snippets</b> (reusable sub-trees), <b>Templates</b> (whole "
+                "documents), and <b>Views</b> (saved panel layouts). Save from here and "
+                "double-click to apply.",
+                [self._snippet_dock, self._templates_dock, self._views_dock],
+            ),
+            TourStep(
+                "5.1 Drop files on demand",
+                "This <b>Drop files</b> toggle opens a drop zone for tagging individual files "
+                "without watching a folder.",
+                [dropzone_btn],
+                on_enter=self._reveal_dropzone,
+            ),
+            TourStep(
+                "5.2 The drop zone",
+                "Drag individual files onto this zone to tag them with the current metadata. "
+                "The <b>Log</b> panel shows what happened.",
+                [self._dropzone_dock],
+                on_enter=self._reveal_dropzone,
+            ),
+            TourStep(
+                "You're ready",
+                "That's the tour. Re-open it any time from <b>Help → Show Tour</b>. Happy tagging!",
+            ),
+        ]
+
     # -- settings persistence ----------------------------------------------
 
     def _restore_settings(self):
@@ -219,6 +322,9 @@ class AutotagApp(QtWidgets.QMainWindow):
         self._view_menu.addAction(self._log_toggle)
         self._view_menu.addSeparator()
         self._view_menu.addAction("Save &View", lambda: self._focus_save(self._views_dock, self._views_panel))
+
+        self._help_menu = bar.addMenu("&Help")
+        self._help_menu.addAction("Show &Tour", self._start_tour)
 
     def _focus_save(self, dock: QtWidgets.QDockWidget, panel: LibraryPanel) -> None:
         """Reveal a library dock and focus its name field (Save shortcut)."""
