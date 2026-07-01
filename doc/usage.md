@@ -108,7 +108,8 @@ starting temperature:
 There are two equivalent views, switched with the **Form / YAML** tabs:
 
 - **YAML tab** — a raw text editor with lightweight syntax highlighting and indentation guides.
-  The tab label turns **green** when the YAML is valid and **red** when it is not.
+  The tab label turns **green** when the YAML is valid and **red** when it is not. Each key line
+  carries a **⤢** button in the right-hand gutter to zoom the panel onto that key (see below).
 - **Form tab** — a structured form generated from the YAML. Nested keys become collapsible
   groups, `value` / `unit` pairs are shown side by side, and a list of mappings (such as
   electrolyte `components`) becomes a collapsible list with a `[index] name` heading per item.
@@ -122,11 +123,16 @@ Elaborate examples of metadata files can be found in the example section of
 
 ## Multi-view: editing distant parts at once
 
-The Form tab is a **tiling multi-view**. A large metadata file often has fields you want to edit
-together but that live far apart in the document. Each panel can be focused on a sub-tree:
+Both the Form and YAML tabs are **tiling multi-views** and work the same way. A large metadata
+file often has fields you want to edit together but that live far apart in the document. Each
+panel can be focused on a sub-tree:
 
 - Type a dotted **path** in a panel's header to zoom that panel onto that part of the document.
   Leave it empty to show the whole document.
+- **Click to zoom** instead of typing: on the Form tab every row has a **⤢** button that drills
+  the panel into that row's sub-tree or value; on the YAML tab the same **⤢** sits in the gutter
+  beside each key line. Repeated clicks drill deeper. The header's **↑** button steps back up one
+  level. Both tabs zoom identically, so a click resolves the same path in either view.
 - **Split** a panel with **⊢** (split right) or **⊟** (split down) to view another path beside it.
 - **Drag** a panel by its handle (⠿) and drop it on another panel's edge to rearrange the tiling.
 - Close a panel with **×**.

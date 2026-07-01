@@ -35,7 +35,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
 
 from autotag_metadata.core.yaml_utils import yaml_ancestor_path, yaml_path_at_line
-from .snippetslist import SNIPPET_MIME
+from .snippets_list import SNIPPET_MIME
 from .yaml_highlighter import YamlHighlighter
 
 _KEY_RE = re.compile(r"""^\s*([^:#\[\]{}&*!|>'"%@`]+):\s*""")

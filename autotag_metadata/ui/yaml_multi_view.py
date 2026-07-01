@@ -1,4 +1,4 @@
-"""Tiling container for ZoomView panels backed by a single YamlDocument."""
+"""Tiling container for zoom panels backed by a single YamlDocument."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -23,11 +23,11 @@ from PyQt6 import QtCore, QtWidgets
 
 from autotag_metadata.core.yaml_document import YamlDocument
 from autotag_metadata.ui.drop_overlay import DropEdge
-from autotag_metadata.ui.zoom_view import ZoomView
+from autotag_metadata.ui.zoom_panels import ZoomFormView, _ZoomPanelBase
 
 
 class YamlMultiView(QtWidgets.QWidget):
-    """Tiling layout of ZoomView panels sharing one YamlDocument.
+    """Tiling layout of zoom panels sharing one YamlDocument.
 
     Any panel can be split right (⊢) or down (⊟), creating a nested QSplitter
     tree. Closing a panel collapses its parent splitter when only one sibling
@@ -46,10 +46,10 @@ class YamlMultiView(QtWidgets.QWidget):
 
     def __init__(self, parent=None, view_factory=None, document: YamlDocument | None = None):
         super().__init__(parent)
-        self._view_factory = view_factory or ZoomView
+        self._view_factory = view_factory or ZoomFormView
         self._doc = document if document is not None else YamlDocument({})
-        self._all_views: list[ZoomView] = []
-        self._active_view: ZoomView | None = None
+        self._all_views: list[_ZoomPanelBase] = []
+        self._active_view: _ZoomPanelBase | None = None
 
         self._container = QtWidgets.QWidget()
         container_layout = QtWidgets.QVBoxLayout(self._container)
@@ -97,25 +97,25 @@ class YamlMultiView(QtWidgets.QWidget):
             view.refresh()
 
     @property
-    def active_view(self) -> ZoomView | None:
+    def active_view(self) -> _ZoomPanelBase | None:
         """The panel currently marked active (snippet source), if any."""
         return self._active_view
 
     # -- active-panel tracking --------------------------------------------
 
     def _on_focus_changed(self, _old, now) -> None:
-        view = self._zoomview_ancestor(now)
+        view = self._zoom_panel_ancestor(now)
         if view is not None:
             self._set_active_view(view)
 
-    def _zoomview_ancestor(self, widget) -> ZoomView | None:
+    def _zoom_panel_ancestor(self, widget) -> _ZoomPanelBase | None:
         while widget is not None:
             if widget in self._all_views:
                 return widget
             widget = widget.parentWidget() if hasattr(widget, "parentWidget") else None
         return None
 
-    def _set_active_view(self, view: ZoomView | None) -> None:
+    def _set_active_view(self, view: _ZoomPanelBase | None) -> None:
         self._active_view = view if view in self._all_views else None
         self._refresh_active_highlight()
 
@@ -140,7 +140,7 @@ class YamlMultiView(QtWidgets.QWidget):
         for view in self._all_views:
             view.refresh()
 
-    def _make_view(self, path: str = "") -> ZoomView:
+    def _make_view(self, path: str = "") -> _ZoomPanelBase:
         view = self._view_factory(self._doc, initial_path=path)
         view.document_changed.connect(self._on_view_doc_changed)
         view.split_requested.connect(self._on_split_requested)
@@ -173,7 +173,7 @@ class YamlMultiView(QtWidgets.QWidget):
         new_view.refresh()
         self._set_active_view(new_view)
 
-    def _on_close_requested(self, view: ZoomView) -> None:
+    def _on_close_requested(self, view: _ZoomPanelBase) -> None:
         if len(self._all_views) <= 1:
             return
 
@@ -224,7 +224,7 @@ class YamlMultiView(QtWidgets.QWidget):
 
     def _on_panel_dropped(self, source_id: int, edge: str) -> None:
         """Move source panel next to target panel based on drop edge."""
-        target: ZoomView = self.sender()
+        target: _ZoomPanelBase = self.sender()
         source = next((v for v in self._all_views if id(v) == source_id), None)
         if source is None or source is target:
             return
@@ -264,7 +264,7 @@ class YamlMultiView(QtWidgets.QWidget):
                 new_splitter.addWidget(source)
             layout.insertWidget(pos, new_splitter)
 
-    def _detach_view(self, view: ZoomView) -> None:
+    def _detach_view(self, view: _ZoomPanelBase) -> None:
         """Remove view from its current position, collapsing parent if needed."""
         parent = view.parentWidget()
         if not isinstance(parent, QtWidgets.QSplitter):
@@ -295,7 +295,7 @@ class YamlMultiView(QtWidgets.QWidget):
 
         parent.deleteLater()
 
-    def _disconnect_view(self, view: ZoomView) -> None:
+    def _disconnect_view(self, view: _ZoomPanelBase) -> None:
         view.document_changed.disconnect(self._on_view_doc_changed)
         view.split_requested.disconnect(self._on_split_requested)
         view.close_requested.disconnect(self._on_close_requested)
@@ -327,7 +327,7 @@ def _splitter_index(splitter: QtWidgets.QSplitter, widget: QtWidgets.QWidget) ->
 
 
 def _serialize(widget: QtWidgets.QWidget) -> dict:
-    """Serialize a ZoomView / QSplitter widget tree to a layout dict."""
+    """Serialize a zoom-panel / QSplitter widget tree to a layout dict."""
     if isinstance(widget, QtWidgets.QSplitter):
         horizontal = widget.orientation() == QtCore.Qt.Orientation.Horizontal
         return {
@@ -342,9 +342,9 @@ def _serialize(widget: QtWidgets.QWidget) -> dict:
 
 
 def _build_widget(node: dict, make_view) -> QtWidgets.QWidget:
-    """Build a ZoomView / QSplitter tree from a layout dict.
+    """Build a zoom-panel / QSplitter tree from a layout dict.
 
-    *make_view* is a ``path -> ZoomView`` factory (registers the view).
+    *make_view* is a ``path -> zoom panel`` factory (registers the view).
     """
     if "children" in node:
         horizontal = node.get("orientation", "h") == "h"

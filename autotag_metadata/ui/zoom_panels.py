@@ -25,9 +25,9 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from autotag_metadata.core.yaml_document import YamlDocument, nest_at_path
 from autotag_metadata.core.yaml_utils import dump_yaml
 from autotag_metadata.ui.drop_overlay import DropEdge, DropOverlay, edge_for_pos
-from autotag_metadata.ui.snippetslist import SNIPPET_MIME
+from autotag_metadata.ui.snippets_list import SNIPPET_MIME
 from autotag_metadata.ui.yaml_form_view import YamlFormView
-from autotag_metadata.ui.yamltextedit import YamlTextEdit
+from autotag_metadata.ui.yaml_text_edit import YamlTextEdit
 
 DRAG_MIME = "application/x-zoomview-id"
 
@@ -308,7 +308,7 @@ class _ZoomPanelBase(QtWidgets.QWidget):
         self.snippet_capture_requested.emit(data, path)
 
 
-class ZoomView(_ZoomPanelBase):
+class ZoomFormView(_ZoomPanelBase):
     """Form-based panel: edits a subtree of the shared document as typed fields.
 
     Editing any field writes the change back into the shared document and emits
@@ -371,8 +371,8 @@ class ZoomView(_ZoomPanelBase):
 class ZoomTextView(_ZoomPanelBase):
     """Raw-YAML panel: shows a path-filtered subtree as editable text.
 
-    Mirrors :class:`ZoomView` in signals and header layout, but uses a
-    :class:`~autotag_metadata.ui.yamltextedit.YamlTextEdit` as the body.
+    Mirrors :class:`ZoomFormView` in signals and header layout, but uses a
+    :class:`~autotag_metadata.ui.yaml_text_edit.YamlTextEdit` as the body.
     Edits are written back to the shared document on every valid keystroke.
     """
 

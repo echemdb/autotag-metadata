@@ -78,7 +78,7 @@ def highlight_rect(widget: QtWidgets.QWidget, edge: str) -> QtCore.QRect:
 
 
 class DropOverlay(QtWidgets.QWidget):
-    """Transparent overlay painted on top of a drop-target ZoomView."""
+    """Transparent overlay painted on top of a drop-target zoom panel."""
 
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)

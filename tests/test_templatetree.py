@@ -5,7 +5,7 @@ import pytest
 @pytest.fixture(scope="module")
 def tree_factory(qapp):
     """Return a factory that creates TemplateTree instances (requires qapp)."""
-    from autotag_metadata.ui.templatetree import TemplateTree
+    from autotag_metadata.ui.template_tree import TemplateTree
 
     def make(data):
         return TemplateTree(data)

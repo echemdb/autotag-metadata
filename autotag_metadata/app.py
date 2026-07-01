@@ -33,12 +33,12 @@ from .core.yaml_document import non_destructive_merge, overwrite_merge
 from .core.yaml_utils import dump_yaml, dump_yaml_to_file, parse_yaml
 from .file_handling import FileMonitor
 from .ui.editable_list import EditableListView
-from .ui.labeldropzone import LabelDropzone
+from .ui.label_dropzone import LabelDropzone
 from .ui.library_panel import LibraryPanel
 from .ui.logger import LogHandler
-from .ui.snippetslist import SnippetsListView
-from .ui.yaml_multiview import YamlMultiView
-from .ui.zoom_view import ZoomTextView
+from .ui.snippets_list import SnippetsListView
+from .ui.yaml_multi_view import YamlMultiView
+from .ui.zoom_panels import ZoomFormView, ZoomTextView
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +101,16 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.actExit.triggered.connect(self.close)
         self.actExit.setShortcut(QtGui.QKeySequence("Ctrl+Q"))
 
-        self._multiview = YamlMultiView()
-        self._multiview.document_changed.connect(self._on_multiview_document_changed)
-        self._multiview.snippet_capture_requested.connect(self.capture_snippet)
-        self._multiview.snippet_dropped.connect(self._apply_snippet_text)
+        self._form_multiview = YamlMultiView(view_factory=ZoomFormView)
+        self._form_multiview.document_changed.connect(self._on_form_multiview_changed)
+        self._form_multiview.snippet_capture_requested.connect(self.capture_snippet)
+        self._form_multiview.snippet_dropped.connect(self._apply_snippet_text)
 
         self._text_multiview = YamlMultiView(view_factory=ZoomTextView)
         self._text_multiview.document_changed.connect(self._on_text_multiview_changed)
         self._text_multiview.snippet_capture_requested.connect(self.capture_snippet)
         self._text_multiview.snippet_dropped.connect(self._apply_snippet_text)
-        self._multiview.set_layout(self.config.multiview_layout)
+        self._form_multiview.set_layout(self.config.multiview_layout)
 
         self._setup_snippet_dock()
         self._setup_dropzone()  # split below before the library docks tabify
@@ -119,7 +119,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         # The editor (form + raw YAML) fills the central area.
         container_layout = self.editorContainer.layout()
         self._stack = QtWidgets.QStackedWidget()
-        self._stack.addWidget(self._multiview)  # index 0 — form
+        self._stack.addWidget(self._form_multiview)  # index 0 — form
         self._stack.addWidget(self._text_multiview)  # index 1 — raw YAML
         container_layout.addWidget(self._stack)
 
@@ -159,7 +159,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.config.temporary_file = self.ledTemporaryLoc.text()
         self.config.file_patterns = self.ledFilePatterns.text()
         self.config.recursive_watching = self.cbRecursiveWatch.isChecked()
-        self.config.multiview_layout = self._multiview.get_layout()
+        self.config.multiview_layout = self._form_multiview.get_layout()
         self.config.save_settings()
 
         super().closeEvent(event)
@@ -183,17 +183,17 @@ class AutotagApp(QtWidgets.QMainWindow):
     def _populate_yamltextfield(self):
         """Sync both multiviews from the parameters dict."""
         self._text_multiview.set_document(self.parameters)
-        self._multiview.set_document(self.parameters)
+        self._form_multiview.set_document(self.parameters)
 
     @QtCore.pyqtSlot(dict)
-    def _on_multiview_document_changed(self, data: dict) -> None:
+    def _on_form_multiview_changed(self, data: dict) -> None:
         self.parameters = data
         self._text_multiview.set_document(data)
 
     @QtCore.pyqtSlot(dict)
     def _on_text_multiview_changed(self, data: dict) -> None:
         self.parameters = data
-        self._multiview.set_document(data)
+        self._form_multiview.set_document(data)
         self._set_yaml_status(True)
         if self.btnUseTemporaryFile.isChecked():
             self._hidden_write_temporary_file()
@@ -440,7 +440,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         itself; pull the subtree (or leaf) from the active panel — the same thing
         that panel's ⊕ button would capture.
         """
-        view = self._multiview.active_view
+        view = self._form_multiview.active_view
         if view is None:
             return
         data, _path = view.capture_payload()
@@ -476,7 +476,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         merge = overwrite_merge if overwrite else non_destructive_merge
         self.parameters = merge(self.parameters or {}, data)
         self._populate_yamltextfield()
-        self._multiview.set_document(self.parameters)
+        self._form_multiview.set_document(self.parameters)
 
     def _unique_snippet_name(self, base: str) -> str:
         existing = set(self.config.snippet_names)
@@ -501,7 +501,7 @@ class AutotagApp(QtWidgets.QMainWindow):
     def save_view(self, name: str) -> None:
         """Save the current multi-view tiling under *name* (from the sidebar)."""
         try:
-            self.config.save_view(name, self._multiview.get_layout())
+            self.config.save_view(name, self._form_multiview.get_layout())
         except OSError as exc:
             QtWidgets.QMessageBox.warning(self, "Save View Failed", str(exc))
             return
@@ -514,7 +514,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         except OSError as exc:
             QtWidgets.QMessageBox.warning(self, "Load View Failed", str(exc))
             return
-        self._multiview.set_layout(layout)
+        self._form_multiview.set_layout(layout)
 
     def _delete_view(self, name: str) -> None:
         if (
@@ -536,7 +536,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             return
         self.parameters = parse_yaml(yaml_text)
         self._populate_yamltextfield()
-        self._multiview.set_document(self.parameters)
+        self._form_multiview.set_document(self.parameters)
 
     def store_template(self, name: str) -> None:
         """Save the current document as a template under *name* (from the sidebar)."""
@@ -596,7 +596,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         if self.parameters is None:
             self.parameters = {}
         self._populate_yamltextfield()
-        self._multiview.set_document(self.parameters)
+        self._form_multiview.set_document(self.parameters)
 
     def _write_temporary_file(self):
         dump_yaml_to_file(self.parameters, self.ledTemporaryLoc.text())
