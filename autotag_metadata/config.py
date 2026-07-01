@@ -127,6 +127,15 @@ class Config:
         self._config["filePatterns"] = value
 
     @property
+    def metadata_suffix(self) -> str:
+        """Ending appended to a measurement file name for its sidecar (e.g. ``.meta.yaml``)."""
+        return self._config.get("metadataSuffix", ".meta.yaml")
+
+    @metadata_suffix.setter
+    def metadata_suffix(self, value: str):
+        self._config["metadataSuffix"] = value
+
+    @property
     def recursive_watching(self) -> bool:
         """Whether to watch subdirectories recursively."""
         return bool(self._config.get("recursiveWatching", False))

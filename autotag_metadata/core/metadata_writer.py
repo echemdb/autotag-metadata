@@ -53,9 +53,9 @@ def hash_file(filename, max_retries=5, retry_delay=1.0):
                 return None
 
 
-def write_metadata(filepath, parameters):
-    """Write *parameters* as YAML to ``<filepath>.meta.yaml``."""
-    meta_path = filepath + ".meta.yaml"
+def write_metadata(filepath, parameters, suffix=".meta.yaml"):
+    """Write *parameters* as YAML to ``<filepath><suffix>`` (default ``.meta.yaml``)."""
+    meta_path = filepath + suffix
     with open(meta_path, "w", encoding="utf-8") as metadata_file:
         yaml.dump(parameters, metadata_file, sort_keys=False, allow_unicode=True)
     logger.info("wrote metadata for %s", meta_path)

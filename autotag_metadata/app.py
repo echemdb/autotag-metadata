@@ -22,6 +22,7 @@
 
 import fnmatch
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -84,6 +85,13 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.ledFilePatterns = QtWidgets.QLineEdit()
         self.ledFilePatterns.setPlaceholderText("*.csv,*.tsv (empty = all)")
         self.cbRecursiveWatch = QtWidgets.QCheckBox("Recursive")
+        self.ledMetaSuffix = QtWidgets.QLineEdit()
+        self.ledMetaSuffix.setPlaceholderText(".meta.yaml")
+        # Restrict to filename-safe characters so the suffix can never introduce a
+        # path separator or a character that is illegal in a file name (Windows).
+        self.ledMetaSuffix.setValidator(
+            QtGui.QRegularExpressionValidator(QtCore.QRegularExpression(r"[A-Za-z0-9._-]*"))
+        )
 
         self.ledFolder = QtWidgets.QLineEdit()
         self.btnBrowse = QtWidgets.QPushButton("Browse…")
@@ -254,6 +262,7 @@ class AutotagApp(QtWidgets.QMainWindow):
             self.ledTemporaryLoc.setText(self.config.temporary_file)
         if self.config.file_patterns:
             self.ledFilePatterns.setText(self.config.file_patterns)
+        self.ledMetaSuffix.setText(self.config.metadata_suffix)
         self.cbRecursiveWatch.setChecked(self.config.recursive_watching)
 
     def closeEvent(self, event):
@@ -261,6 +270,7 @@ class AutotagApp(QtWidgets.QMainWindow):
         self.config.watch_folder = self.ledFolder.text()
         self.config.temporary_file = self.ledTemporaryLoc.text()
         self.config.file_patterns = self.ledFilePatterns.text()
+        self.config.metadata_suffix = self._metadata_suffix()
         self.config.recursive_watching = self.cbRecursiveWatch.isChecked()
         self.config.multiview_layout = self._form_multiview.get_layout()
         self.config.save_settings()
@@ -394,6 +404,11 @@ class AutotagApp(QtWidgets.QMainWindow):
         tb.addWidget(self.ledFilePatterns)
         tb.addWidget(self.cbRecursiveWatch)
         tb.addSeparator()
+        tb.addWidget(QtWidgets.QLabel("Suffix: "))
+        self.ledMetaSuffix.setMaximumWidth(120)
+        self.ledMetaSuffix.setToolTip("Ending appended to the sidecar file name (empty = .meta.yaml)")
+        tb.addWidget(self.ledMetaSuffix)
+        tb.addSeparator()
         tb.addWidget(QtWidgets.QLabel("Live file: "))
         self.ledTemporaryLoc.setMinimumWidth(240)
         tb.addWidget(self.ledTemporaryLoc)
@@ -503,17 +518,18 @@ class AutotagApp(QtWidgets.QMainWindow):
         skipped.
         """
         patterns = self._file_pattern_list()
+        suffix = self._metadata_suffix()
         targets: list[Path] = []
         for path in paths:
             p = Path(path)
-            if p.is_file() and not p.name.endswith(".meta.yaml"):
+            if p.is_file() and not p.name.endswith(suffix):
                 targets.append(p)
             elif p.is_dir():
                 targets += [
                     child
                     for child in sorted(p.rglob("*"))
                     if child.is_file()
-                    and not child.name.endswith(".meta.yaml")
+                    and not child.name.endswith(suffix)
                     and self._matches_pattern(child.name, patterns)
                 ]
         for target in targets:
@@ -524,6 +540,19 @@ class AutotagApp(QtWidgets.QMainWindow):
         """The watch file patterns as a list, or None when none are set (= all)."""
         text = self.ledFilePatterns.text().strip()
         return [p.strip() for p in text.split(",") if p.strip()] or None
+
+    def _metadata_suffix(self) -> str:
+        """Sidecar file-name ending; falls back to ``.meta.yaml`` when unusable.
+
+        The field validator blocks illegal keystrokes, but ``setText`` (restoring a
+        hand-edited or older config) bypasses it, so unsafe characters are stripped
+        here too. A leading dot is enforced so the suffix reads as a file extension
+        (``meta.yaml`` → ``.meta.yaml``) rather than fusing onto the file name. An
+        empty result would make the sidecar path equal the source file and overwrite
+        it, so the default is substituted for a blank/stripped field.
+        """
+        safe = re.sub(r"[^A-Za-z0-9._-]", "", self.ledMetaSuffix.text()).lstrip(".")
+        return f".{safe}" if safe else ".meta.yaml"
 
     @staticmethod
     def _matches_pattern(name: str, patterns: list[str] | None) -> bool:
@@ -779,11 +808,12 @@ class AutotagApp(QtWidgets.QMainWindow):
 
     def _file_created(self, msg):
         """Handle a newly created file — build and write metadata."""
-        if not msg.endswith(".meta.yaml"):
+        suffix = self._metadata_suffix()
+        if not msg.endswith(suffix):
             logger.info("created %s", msg)
             result = build_metadata(msg, self.parameters)
             if result is not None:
-                write_metadata(msg, self.parameters)
+                write_metadata(msg, self.parameters, suffix)
 
     # -- logging -----------------------------------------------------------
 

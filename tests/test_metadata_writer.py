@@ -38,6 +38,16 @@ def test_write_metadata_creates_sidecar(tmp_path):
     assert loaded == {"experiment": "test", "value": 42}
 
 
+def test_write_metadata_custom_suffix(tmp_path):
+    f = tmp_path / "data.csv"
+    f.write_bytes(b"x")
+    write_metadata(str(f), {"experiment": "test"}, suffix=".metadata.yml")
+    meta = tmp_path / "data.csv.metadata.yml"
+    assert meta.exists()
+    assert not (tmp_path / "data.csv.meta.yaml").exists()
+    assert yaml.safe_load(meta.read_text(encoding="utf-8")) == {"experiment": "test"}
+
+
 def test_write_metadata_preserves_key_order(tmp_path):
     f = tmp_path / "data.csv"
     f.write_bytes(b"x")
