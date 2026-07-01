@@ -1,16 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_data_files
 
 a = Analysis(
     ["autotag_metadata/__main__.py"],
     pathex=[],
     binaries=[],
     datas=[("README.md", "."),
-    ("autotag_metadata/ui/main_window.ui", "autotag_metadata/ui")],
+    ("autotag_metadata/ui/main_window.ui", "autotag_metadata/ui")]
+    # distlib (pulled in via desktop_app) enumerates these wrappers at import.
+    + collect_data_files("distlib"),
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    # Register distlib's resource finder for PyInstaller's frozen importer, else
+    # the Windows build crashes on startup. See rthook_distlib.py.
+    runtime_hooks=["rthook_distlib.py"],
     excludes=[],
     noarchive=False,
 )
