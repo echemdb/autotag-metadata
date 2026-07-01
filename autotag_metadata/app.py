@@ -23,16 +23,14 @@
 import fnmatch
 import logging
 import sys
-import textwrap
 from pathlib import Path
 
-import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 from .config import Config
 from .core.metadata_writer import build_metadata, write_metadata
-from .core.yaml_document import nest_at_path, non_destructive_merge, overwrite_merge
-from .core.yaml_utils import dump_yaml, dump_yaml_to_file, parse_yaml, validate_yaml_syntax
+from .core.yaml_document import non_destructive_merge, overwrite_merge
+from .core.yaml_utils import dump_yaml, dump_yaml_to_file, parse_yaml
 from .file_handling import FileMonitor
 from .ui.editable_list import EditableListView
 from .ui.labeldropzone import LabelDropzone
@@ -40,6 +38,7 @@ from .ui.library_panel import LibraryPanel
 from .ui.logger import LogHandler
 from .ui.snippetslist import SnippetsListView
 from .ui.yaml_multiview import YamlMultiView
+from .ui.zoom_view import ZoomTextView
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +105,11 @@ class AutotagApp(QtWidgets.QMainWindow):
         self._multiview.document_changed.connect(self._on_multiview_document_changed)
         self._multiview.snippet_capture_requested.connect(self.capture_snippet)
         self._multiview.snippet_dropped.connect(self._apply_snippet_text)
+
+        self._text_multiview = YamlMultiView(view_factory=ZoomTextView)
+        self._text_multiview.document_changed.connect(self._on_text_multiview_changed)
+        self._text_multiview.snippet_capture_requested.connect(self.capture_snippet)
+        self._text_multiview.snippet_dropped.connect(self._apply_snippet_text)
         self._multiview.set_layout(self.config.multiview_layout)
 
         self._setup_snippet_dock()
@@ -114,10 +118,9 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         # The editor (form + raw YAML) fills the central area.
         container_layout = self.editorContainer.layout()
-        container_layout.removeWidget(self.yamlText)
         self._stack = QtWidgets.QStackedWidget()
         self._stack.addWidget(self._multiview)  # index 0 — form
-        self._stack.addWidget(self.yamlText)  # index 1 — raw YAML
+        self._stack.addWidget(self._text_multiview)  # index 1 — raw YAML
         container_layout.addWidget(self._stack)
 
         self._setup_menus()
@@ -128,8 +131,6 @@ class AutotagApp(QtWidgets.QMainWindow):
 
         self.ledFolder.textChanged.connect(self._enable_activate)
         self.btnActivate.setDisabled(True)
-        self.yamlText.textChanged.connect(self._act_on_yaml_change)
-        self.yamlText.make_snippet_requested.connect(self.make_snippet_from_text)
         self.parameters = {}
 
         self._restore_settings()
@@ -170,35 +171,32 @@ class AutotagApp(QtWidgets.QMainWindow):
     # -- tree / yaml synchronization ---------------------------------------
 
     def _validate_yaml(self):
-        """Validate the raw YAML and reflect the result on the YAML tab button."""
-        error = validate_yaml_syntax(self.yamlText.toPlainText())
-        valid = error is None
-        self._set_yaml_status(valid, None if valid else str(error))
-        return valid
+        """Reflect YAML validity on the tab button (document is always valid when maintained via the UI)."""
+        self._set_yaml_status(True)
+        return True
 
     def _set_yaml_status(self, valid: bool, detail: str | None = None) -> None:
         """Tint the YAML tab green/red to signal syntax validity."""
         self._view_tabs.setTabTextColor(_IDX_YAML, QtGui.QColor(_YAML_OK if valid else _YAML_ERR))
         self._view_tabs.setTabToolTip(_IDX_YAML, "YAML is valid" if valid else f"YAML syntax error:\n{detail}")
 
-    def _act_on_yaml_change(self):
-        if self._validate_yaml():
-            self.parameters = parse_yaml(self.yamlText.toPlainText())
-            if isinstance(self.parameters, dict):
-                self._multiview.set_document(self.parameters)
-                if self.btnUseTemporaryFile.isChecked():
-                    self._hidden_write_temporary_file()
-
     def _populate_yamltextfield(self):
-        """Sync the raw YAML text field from the parameters dict."""
-        self.yamlText.blockSignals(True)
-        self.yamlText.setPlainText(dump_yaml(self.parameters))
-        self.yamlText.blockSignals(False)
+        """Sync both multiviews from the parameters dict."""
+        self._text_multiview.set_document(self.parameters)
+        self._multiview.set_document(self.parameters)
 
     @QtCore.pyqtSlot(dict)
     def _on_multiview_document_changed(self, data: dict) -> None:
         self.parameters = data
-        self._populate_yamltextfield()
+        self._text_multiview.set_document(data)
+
+    @QtCore.pyqtSlot(dict)
+    def _on_text_multiview_changed(self, data: dict) -> None:
+        self.parameters = data
+        self._multiview.set_document(data)
+        self._set_yaml_status(True)
+        if self.btnUseTemporaryFile.isChecked():
+            self._hidden_write_temporary_file()
 
     # -- menus / docks -----------------------------------------------------
 
@@ -489,17 +487,6 @@ class AutotagApp(QtWidgets.QMainWindow):
             i += 1
         return f"{base}-{i}"
 
-    def make_snippet_from_text(self, text: str, path: str = "") -> None:
-        """Save a YAML selection as a snippet, wrapped in its parent tree (path)."""
-        try:
-            data = parse_yaml(textwrap.dedent(text))
-        except yaml.YAMLError as exc:
-            QtWidgets.QMessageBox.warning(self, "Invalid Selection", f"Not valid YAML:\n{exc}")
-            return
-        if data is None:
-            return
-        self.capture_snippet(nest_at_path(path, data), path)
-
     def _delete_snippet(self, name: str) -> None:
         if (
             QtWidgets.QMessageBox.question(self, "Delete Snippet", f'Delete snippet "{name}"?')
@@ -554,7 +541,7 @@ class AutotagApp(QtWidgets.QMainWindow):
     def store_template(self, name: str) -> None:
         """Save the current document as a template under *name* (from the sidebar)."""
         try:
-            self.config.save_template(name, self.yamlText.toPlainText())
+            self.config.save_template(name, dump_yaml(self.parameters))
         except OSError as exc:
             QtWidgets.QMessageBox.warning(self, "Store Template Failed", str(exc))
             return

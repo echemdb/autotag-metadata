@@ -44,9 +44,10 @@ class YamlMultiView(QtWidgets.QWidget):
     snippet_capture_requested = QtCore.pyqtSignal(dict, str)
     snippet_dropped = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, view_factory=None, document: YamlDocument | None = None):
         super().__init__(parent)
-        self._doc = YamlDocument({})
+        self._view_factory = view_factory or ZoomView
+        self._doc = document if document is not None else YamlDocument({})
         self._all_views: list[ZoomView] = []
         self._active_view: ZoomView | None = None
 
@@ -109,7 +110,7 @@ class YamlMultiView(QtWidgets.QWidget):
 
     def _zoomview_ancestor(self, widget) -> ZoomView | None:
         while widget is not None:
-            if isinstance(widget, ZoomView) and widget in self._all_views:
+            if widget in self._all_views:
                 return widget
             widget = widget.parentWidget() if hasattr(widget, "parentWidget") else None
         return None
@@ -134,8 +135,13 @@ class YamlMultiView(QtWidgets.QWidget):
 
     # ------------------------------------------------------------------
 
+    def refresh_all(self) -> None:
+        """Refresh all panels from the shared document without emitting document_changed."""
+        for view in self._all_views:
+            view.refresh()
+
     def _make_view(self, path: str = "") -> ZoomView:
-        view = ZoomView(self._doc, initial_path=path)
+        view = self._view_factory(self._doc, initial_path=path)
         view.document_changed.connect(self._on_view_doc_changed)
         view.split_requested.connect(self._on_split_requested)
         view.close_requested.connect(self._on_close_requested)

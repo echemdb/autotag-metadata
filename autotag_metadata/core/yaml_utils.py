@@ -134,3 +134,58 @@ def yaml_ancestor_path(text: str, start_line: int, end_line: int) -> str:
                 break
     keys.reverse()
     return ".".join(keys)
+
+
+def yaml_path_at_line(text: str, line_no: int) -> str | None:
+    """Relative dotted path of the YAML node starting on *line_no* (0-based).
+
+    Composes *text* and walks the node tree, matching mapping keys and sequence
+    items by their source line. Returns a dotted path (numeric segments address
+    list indices, e.g. ``components.0.ph``) or ``None`` when no key or element
+    starts on that line, or the text is not valid YAML. This mirrors the form
+    view's structural path derivation, so the raw-YAML and form editors drill
+    into the same subtree from the same line.
+
+    >>> doc = "instrument:\\n  settings:\\n    gain: 3\\n    mode: cv\\n"
+    >>> yaml_path_at_line(doc, 0)
+    'instrument'
+    >>> yaml_path_at_line(doc, 1)
+    'instrument.settings'
+    >>> yaml_path_at_line(doc, 2)
+    'instrument.settings.gain'
+    >>> seq = "components:\\n- name: water\\n  ph: 7\\n"
+    >>> yaml_path_at_line(seq, 1)
+    'components.0'
+    >>> yaml_path_at_line(seq, 2)
+    'components.0.ph'
+    >>> yaml_path_at_line("a: 1\\n", 9) is None
+    True
+    """
+    try:
+        root = yaml.compose(text)
+    except yaml.YAMLError:
+        return None
+    if root is None:
+        return None
+    return _node_path_at_line(root, line_no, "")
+
+
+def _node_path_at_line(node, line_no: int, prefix: str) -> str | None:
+    """Depth-first search for the mapping key or sequence item on *line_no*."""
+    if isinstance(node, yaml.MappingNode):
+        for key_node, value_node in node.value:
+            child = f"{prefix}.{key_node.value}" if prefix else str(key_node.value)
+            if key_node.start_mark.line == line_no:
+                return child
+            found = _node_path_at_line(value_node, line_no, child)
+            if found is not None:
+                return found
+    elif isinstance(node, yaml.SequenceNode):
+        for i, item_node in enumerate(node.value):
+            child = f"{prefix}.{i}" if prefix else str(i)
+            if item_node.start_mark.line == line_no:
+                return child
+            found = _node_path_at_line(item_node, line_no, child)
+            if found is not None:
+                return found
+    return None

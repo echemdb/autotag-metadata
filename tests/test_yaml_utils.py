@@ -5,6 +5,7 @@ from autotag_metadata.core.yaml_utils import (
     parse_yaml,
     validate_yaml_syntax,
     yaml_ancestor_path,
+    yaml_path_at_line,
 )
 
 
@@ -39,6 +40,29 @@ def test_ancestor_path_same_indent_sequence_single_item_with_sibling_above():
 def test_ancestor_path_indented_sequence_style():
     doc = "e:\n  c:\n    - name: water\n    - name: acid\n"
     assert yaml_ancestor_path(doc, 2, 3) == "e.c"
+
+
+def test_path_at_line_walks_full_ladder():
+    # A nested key resolves to its complete ancestor ladder, not just the parent.
+    assert yaml_path_at_line(DOC, 2) == "electrochemical system.electrolyte.type"
+
+
+def test_path_at_line_addresses_list_index():
+    # The clicked line inside a block-sequence item carries its numeric index.
+    assert yaml_path_at_line(DOC, 5) == "electrochemical system.electrolyte.components.0.sum formula"
+
+
+def test_path_at_line_sequence_item_start():
+    # Clicking the "- name: ..." line drills to the whole list element.
+    assert yaml_path_at_line(DOC, 6) == "electrochemical system.electrolyte.components.1"
+
+
+def test_path_at_line_none_when_no_key():
+    assert yaml_path_at_line("a: 1\nb: 2\n", 5) is None
+
+
+def test_path_at_line_none_on_invalid_yaml():
+    assert yaml_path_at_line("a: :\n", 0) is None
 
 
 def test_validate_yaml_syntax_valid():
