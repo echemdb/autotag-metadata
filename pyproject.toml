@@ -21,7 +21,7 @@ version = "0.1.0"
 repository = "https://github.com/echemdb/autotag-metadata"
 
 [tool.setuptools]
-packages = ["autotag_metadata",]
+packages = ["autotag_metadata", "autotag_metadata.core", "autotag_metadata.ui"]
 include-package-data = true
 
 [tool.setuptools.package-data]
@@ -76,22 +76,26 @@ python = "3.14.*"
 
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
+pytest-qt = "*"
 pytest-xdist = "*"
 
 [tool.pixi.feature.test.tasks]
-doctest = "pytest -n auto --doctest-modules autotag_metadata"
+doctest = { cmd = "pytest --doctest-modules autotag_metadata tests/", env = { QT_QPA_PLATFORM = "offscreen" } }
 
 [tool.pixi.feature.lint.dependencies]
-mypy = "*"
 ruff = "*"
-types-pyyaml = "*"
-types-toml = "*"
+ty = "*"
 
 [tool.pixi.feature.lint.tasks]
 pylint = "ruff check autotag_metadata"
 black = "ruff format autotag_metadata"
 isort = "ruff check --select I autotag_metadata"
-lint = { depends-on = ["pylint", "black", "isort"]  }
+typecheck = "ty check autotag_metadata"
+lint = { depends-on = ["pylint", "black", "isort", "typecheck"]  }
+# CI variants: fail (don't rewrite) on unformatted / unsorted code.
+format-check = "ruff format --check --diff autotag_metadata"
+isort-check = "ruff check --select I --diff autotag_metadata"
+lint-check = { depends-on = ["pylint", "format-check", "isort-check", "typecheck"] }
 
 [tool.pixi.feature.doc.dependencies]
 jupytext = "*"
@@ -125,6 +129,12 @@ lint.ignore = [
 ]
 lint.fixable = ["E", "F", "W", "B"]
 line-length = 115
+
+[tool.ty.rules]
+# PyQt6 (conda-forge) ships compiled extension modules with no type stubs, so
+# every `from PyQt6 import ...` is statically unresolvable. The imports are valid
+# at runtime; silence the noise rather than littering per-line ignores.
+unresolved-import = "ignore"
 
 [project.scripts]
 autotag_metadata = "desktop_app:entry_point"

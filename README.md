@@ -1,51 +1,84 @@
 ![test status](https://github.com/echemdb/autotag-metadata/actions/workflows/test.yml/badge.svg)
 
-autotag-metadata is a lightweight tool that creates metadata files for newly created files in the filesystem. A common example is the creation of measurement files during an experiment, for which you would like to store additional information. The content of the newly stored metadata file is based on an input file.
+autotag-metadata is a lightweight tool that creates metadata files for newly created files
+in the filesystem. A common example is the creation of measurement files during an
+experiment, for which you would like to store additional information. The content of the
+newly created metadata file is based on a user-defined template.
 
 ![basic_usage](https://raw.githubusercontent.com/echemdb/autotag-metadata/main/doc/images/basic_usage.gif)
 
-It is possible to couple autotag-metadata with editors to exploit their advanced capabilities for verifying the metadata against a schema.
+It is possible to couple autotag-metadata with editors to exploit their advanced
+capabilities for verifying the metadata against a schema.
 
 ![advanced_usage](https://raw.githubusercontent.com/echemdb/autotag-metadata/main/doc/images/advanced_usage.gif)
 
-# Installation instructions
+Multiple instances of the program can be launched to watch different folders simultaneously.
 
-Detailed installation instructions can be found in our [documentation](https://echemdb.github.io/autotag-metadata).
+# Installation
 
 ## Windows
 
-The latest installer and/or executable can be found in the [release section](https://github.com/echemdb/autotag-metadata/releases).
+Download the latest installer from the
+[release section](https://github.com/echemdb/autotag-metadata/releases) and launch the
+program from the Start menu.
 
-Launch the program from the start menu.
+## From source (all platforms)
 
-Multiple instances of the program can be launched to watch different folders for file creations.
-
-## Terminal
-
-**Requirements**
-
-* *Windows*: A terminal such as [Git Bash](https://gitforwindows.org/).
-* *All*: Download and install the appropriate [miniconda package](https://docs.conda.io/en/latest/miniconda.html) or [micromamba package](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html) for your platform.
-* *All*: Check if `pip` is installed, else `conda install pip` or `mamba install pip`.
-
-**Installation**
-
-Open a terminal and execute (*Windows*: right click on a folder and choose `Git Bash` from the context menu.)
+[Install pixi](https://pixi.sh/latest/#installation), then:
 
 ```sh
-pip install git+https://github.com/echemdb/autotag-metadata
+git clone https://github.com/echemdb/autotag-metadata
+cd autotag-metadata
+pixi run autotag-metadata
 ```
 
-*Windows*: Create an icon in the start menu
+# Development
+
+All environments and tasks are managed with [pixi](https://pixi.sh). Configuration lives
+in `pyproject.toml` under `[tool.pixi.*]` — there is no separate `pixi.toml`.
 
 ```sh
-desktop-app install autotag_metadata
+pixi install   # set up all environments
 ```
 
-**Starting Autotag-Metadata**
+**Common tasks**
 
-```sh
-python -m autotag_metadata
+| Task | Command |
+|------|---------|
+| Run the app | `pixi run autotag-metadata` |
+| Run tests | `pixi run -e python-312 doctest` |
+| Lint | `pixi run -e dev lint` |
+| Format | `pixi run -e dev black` |
+| Build docs | `pixi run -e dev doc` |
+| Package (PyInstaller) | `pixi run -e packaging package` |
+
+Tests run against Python 3.10–3.14. For headless environments set
+`QT_QPA_PLATFORM=offscreen`.
+
+**Architecture**
+
+```
+autotag_metadata/
+    __main__.py          entry point
+    app.py               UI controller — QMainWindow that builds the toolbar/dock chrome
+    config.py            typed accessors over a TOML config file; stores templates/snippets/views
+    file_handling.py     filesystem monitoring via watchfiles
+    core/                (no Qt)
+        metadata_writer.py   file hashing + .meta.yaml writing
+        yaml_utils.py        YAML parse / validate / dump
+        yaml_document.py     subtree get/set + path-anchored snippet merging
+    ui/
+        yaml_multiview.py, zoom_view.py, yaml_form_view.py   tiling form editor
+        yamltextedit.py, yaml_highlighter.py                 raw YAML editor + highlighting
+        library_panel.py, editable_list.py, snippetslist.py  snippets/templates/views sidebars
+        labeldropzone.py, drop_overlay.py, logger.py, *.ui
+tests/
+    test_config.py, test_metadata_writer.py, test_yaml_utils.py,
+    test_yaml_document.py, test_templatetree.py, test_file_handling.py,
+    test_integration.py
 ```
 
-Multiple instances of the program can be launched to watch different folders for file creations.
+`core/` modules have no Qt dependency and can be tested without a running application.
+
+Detailed usage instructions are in the
+[documentation](https://echemdb.github.io/autotag-metadata).

@@ -1,9 +1,9 @@
-"""Autotag Metadata App"""
+"""Autotag Metadata App — main window and application entry point."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
 #        Copyright (C) 2022      Albert Engstfeld
-#        Copyright (C) 2021-2022 Johannes Hermann
+#        Copyright (C) 2021-2026 Johannes Hermann
 #
 #  autotag-metadata is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -20,475 +20,839 @@
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
 
-import datetime
-import hashlib
+import fnmatch
 import logging
-import os
+import re
 import sys
-import time
+from pathlib import Path
 
-import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
-from yamllint import linter
 
 from .config import Config
+from .core.metadata_writer import build_metadata, write_metadata
+from .core.yaml_document import non_destructive_merge, overwrite_merge
+from .core.yaml_utils import dump_yaml, dump_yaml_to_file, parse_yaml
 from .file_handling import FileMonitor
+from .ui.editable_list import EditableListView
+from .ui.label_dropzone import LabelDropzone
+from .ui.library_panel import LibraryPanel
 from .ui.logger import LogHandler
-from .ui.template_dialog import TemplateDialog, TemplateDialogType
-from .ui.templatetree import TemplateTree
-
-yaml_config_str = """---
-
-yaml-files:
-  - "*.yaml"
-  - "*.yml"
-  - ".yamllint"
-
-rules:
-  braces: enable
-  brackets: enable
-  colons: enable
-  commas: enable
-  comments:
-    level: warning
-  comments-indentation:
-    level: warning
-  document-end: disable
-  document-start:
-    level: warning
-  empty-lines: enable
-  empty-values: disable
-  hyphens: enable
-  indentation: enable
-  key-duplicates: enable
-  key-ordering: disable
-  line-length: enable
-  new-line-at-end-of-file: enable
-  new-lines: enable
-  octal-values: disable
-  quoted-strings: disable
-  trailing-spaces: enable
-  truthy:
-    level: warning"""
-
+from .ui.snippets_list import SnippetsListView
+from .ui.tour import TourOverlay, TourStep
+from .ui.yaml_multi_view import YamlMultiView
+from .ui.zoom_panels import ZoomFormView, ZoomTextView
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("INFO")
 
-path = os.path.abspath(__file__)
-dir_path = os.path.dirname(path)
+_DIR = Path(__file__).parent
+_ICON = _DIR / "autotag_metadata.png"
+
+_IDX_FORM = 0
+_IDX_YAML = 1
+
+# Validity indicator colours for the YAML tab button (read on light and dark).
+_YAML_OK = "#27ae60"
+_YAML_ERR = "#e74c3c"
+
+
+def _default_snippet_name(data) -> str:
+    """Default name for a captured snippet: its top-level key, else 'snippet'."""
+    if isinstance(data, dict) and data:
+        return str(next(iter(data)))
+    return "snippet"
 
 
 class AutotagApp(QtWidgets.QMainWindow):
-    """Main window class"""
+    """Main window — thin UI controller that delegates to core modules."""
 
     def __init__(self, *args, **kwargs):
         super(AutotagApp, self).__init__(*args, **kwargs)
-        uic.loadUi(f"{dir_path}/ui/main_window.ui", self)
+        uic.loadUi(_DIR / "ui" / "main_window.ui", self)
 
-        # set window title and icon
-        title = "Autotag Metadata"
-        self.setWindowTitle(title)
-        icon = QtGui.QIcon()
-        icon.addPixmap(
-            QtGui.QPixmap(f"{os.path.abspath(os.path.dirname(__file__))}/autotag_metadata.png"),
-            QtGui.QIcon.Mode.Selected,
-            QtGui.QIcon.State.On,
-        )
-        self.setWindowIcon(icon)
+        self.setWindowTitle("Autotag Metadata")
+        self.setWindowIcon(QtGui.QIcon(str(_ICON)))
 
-        self.setup_logger()
+        self._setup_logger()
         self.config = Config()
 
+        # Watch / live-file controls — kept under their original attribute names
+        # so the handler methods stay unchanged. They live in the toolbars.
+        self.ledTemporaryLoc = QtWidgets.QLineEdit()
+        self.ledTemporaryLoc.setPlaceholderText("YAML file kept in sync with the editor")
+        self.btnUseTemporaryFile = QtWidgets.QPushButton("Use")
+        self.btnUseTemporaryFile.setCheckable(True)
+        self.btnSelectTemporaryFile = QtWidgets.QPushButton("Select…")
+        self.ledFilePatterns = QtWidgets.QLineEdit()
+        self.ledFilePatterns.setPlaceholderText("*.csv,*.tsv (empty = all)")
+        self.cbRecursiveWatch = QtWidgets.QCheckBox("Recursive")
+        self.ledMetaSuffix = QtWidgets.QLineEdit()
+        self.ledMetaSuffix.setPlaceholderText(".meta.yaml")
+        # Restrict to filename-safe characters so the suffix can never introduce a
+        # path separator or a character that is illegal in a file name (Windows).
+        self.ledMetaSuffix.setValidator(
+            QtGui.QRegularExpressionValidator(QtCore.QRegularExpression(r"[A-Za-z0-9._-]*"))
+        )
+
+        self.ledFolder = QtWidgets.QLineEdit()
+        self.btnBrowse = QtWidgets.QPushButton("Browse…")
+        self.btnActivate = QtWidgets.QPushButton("Activate")
+        self.btnActivate.setCheckable(True)
+
+        # signal wiring
         self.btnSelectTemporaryFile.clicked.connect(self.select_temporary_file)
         self.btnUseTemporaryFile.clicked.connect(self.toggle_watch_temporary_file)
         self.btnUseTemporaryFile.setDisabled(True)
-        self.ledTemporaryLoc.textChanged.connect(self.enable_use)
-        # It sets up layout and widgets that are defined
-        self.btnBrowse.clicked.connect(self.browse_folder)  # When the button is pressed
-        # Execute browse_folder function
+        self.ledTemporaryLoc.textChanged.connect(self._enable_use)
+        self.btnBrowse.clicked.connect(self.browse_folder)
         self.btnActivate.clicked.connect(self.toggle_watch)
-        # Template management
-        self.btnStore.clicked.connect(self.store_template)
-        self.btnLoad.clicked.connect(self.load_template)
 
-        self.template_tree = TemplateTree({})
-        self.template_tree.model.dataChanged.connect(self.on_tree_data_change)
-        self.scrollArea.setWidget(self.template_tree)
+        # menu actions and keyboard shortcuts
+        self.actExit.triggered.connect(self.close)
+        self.actExit.setShortcut(QtGui.QKeySequence("Ctrl+Q"))
 
-        self.label_dropzone.files_submitted.connect(self._on_files_submitted)
+        self._form_multiview = YamlMultiView(view_factory=ZoomFormView)
+        self._form_multiview.document_changed.connect(self._on_form_multiview_changed)
+        self._form_multiview.snippet_capture_requested.connect(self.capture_snippet)
+        self._form_multiview.snippet_dropped.connect(self._apply_snippet_text)
 
-        self.ledFolder.textChanged.connect(self.enable_activate)
+        self._text_multiview = YamlMultiView(view_factory=ZoomTextView)
+        self._text_multiview.document_changed.connect(self._on_text_multiview_changed)
+        self._text_multiview.snippet_capture_requested.connect(self.capture_snippet)
+        self._text_multiview.snippet_dropped.connect(self._apply_snippet_text)
+        self._form_multiview.set_layout(self.config.multiview_layout)
+
+        self._setup_snippet_dock()
+        self._setup_dropzone()  # split below before the library docks tabify
+        self._setup_library_docks()
+
+        # The editor (form + raw YAML) fills the central area.
+        container_layout = self.editorContainer.layout()
+        self._stack = QtWidgets.QStackedWidget()
+        self._stack.addWidget(self._form_multiview)  # index 0 — form
+        self._stack.addWidget(self._text_multiview)  # index 1 — raw YAML
+        container_layout.addWidget(self._stack)
+
+        self._setup_menus()
+        self._setup_toolbar()
+        self._setup_settings_toolbar()
+
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Tab"), self).activated.connect(self._toggle_view)
+
+        self.ledFolder.textChanged.connect(self._enable_activate)
         self.btnActivate.setDisabled(True)
-        self.yamlText.textChanged.connect(self.act_on_yaml_change)
         self.parameters = {}
 
+        self._restore_settings()
+
+        self._temporary_write_timer = QtCore.QTimer()
+        self._temporary_write_timer.timeout.connect(self._reenable_temporary_file_watch)
+
+        self._tour: TourOverlay | None = None
+        if not self.config.tour_seen:
+            # Defer until the window is shown so widget geometry is settled.
+            QtCore.QTimer.singleShot(0, self._start_tour)
+
+    # -- guided tour -------------------------------------------------------
+
+    def _start_tour(self) -> None:
+        """Launch the coach-mark tour over the live chrome."""
+        if self._tour is not None:
+            return
+        self.config.tour_seen = True
+        self._tour = TourOverlay(self, self._build_tour_steps())
+        self._tour.finished.connect(self._on_tour_finished)
+        self._tour.start()
+
+    def _on_tour_finished(self) -> None:
+        self._tour = None
+
+    def _reveal_dropzone(self) -> None:
+        """Show the drop-files dock so the tour can highlight it."""
+        self._dropzone_dock.show()
+        self._dropzone_dock.raise_()
+
+    def _build_tour_steps(self) -> list[TourStep]:
+        """Steps pointing at the real toolbar/editor/library chrome."""
+        sidebar_btn = self._toolbar.widgetForAction(self._act_sidebar)
+        dropzone_btn = self._toolbar.widgetForAction(self._dropzone_toggle)
+        return [
+            TourStep(
+                "Welcome to Autotag Metadata",
+                "This tool watches a folder and writes a <code>.meta.yaml</code> sidecar next to "
+                "every new file, using the metadata you prepare here. Let's walk through it.",
+            ),
+            TourStep(
+                "1. Choose a folder to watch",
+                "Pick the folder to watch with <b>Browse…</b>, then press <b>Activate</b>. While "
+                "active, every new file in it is tagged with your metadata.",
+                [self.ledFolder, self.btnBrowse, self.btnActivate],
+            ),
+            TourStep(
+                "2. Filter which files",
+                "Restrict tagging to matching files with comma-separated globs "
+                "(e.g. <code>*.csv,*.tsv</code>), and tick <b>Recursive</b> to include sub-folders.",
+                [self.ledFilePatterns, self.cbRecursiveWatch],
+            ),
+            TourStep(
+                "3.1 Switch between views",
+                "Edit metadata as a structured <b>Form</b> or as raw <b>YAML</b>. These tabs switch "
+                "between the two — both edit the same document, so you can move freely between them.",
+                [self._view_tabs],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_FORM),
+            ),
+            TourStep(
+                "3.2 The Form editor",
+                "The Form shows your metadata as fields. It is a tiling multi-view: split a panel "
+                "and zoom each onto a different path (with the <b>⤢</b> buttons) to edit distant "
+                "fields side by side.",
+                [self._form_multiview],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_FORM),
+            ),
+            TourStep(
+                "3.3 The YAML editor",
+                "The YAML tab is the same document as raw text, with syntax highlighting. Its tab "
+                "label turns green when the YAML is valid and red when it is not.",
+                [self._text_multiview],
+                on_enter=lambda: self._view_tabs.setCurrentIndex(_IDX_YAML),
+            ),
+            TourStep(
+                "4.1 Open the Library",
+                "This <b>☰ Library</b> button shows or hides the library sidebar of reusable "
+                "Snippets, Templates, and Views.",
+                [sidebar_btn],
+                on_enter=lambda: self._act_sidebar.setChecked(True),
+            ),
+            TourStep(
+                "4.2 The Library panel",
+                "The Library holds <b>Snippets</b> (reusable sub-trees), <b>Templates</b> (whole "
+                "documents), and <b>Views</b> (saved panel layouts). Save from here and "
+                "double-click to apply.",
+                [self._snippet_dock, self._templates_dock, self._views_dock],
+            ),
+            TourStep(
+                "5.1 Drop files on demand",
+                "This <b>Drop files</b> toggle opens a drop zone for tagging individual files "
+                "without watching a folder.",
+                [dropzone_btn],
+                on_enter=self._reveal_dropzone,
+            ),
+            TourStep(
+                "5.2 The drop zone",
+                "Drag individual files onto this zone to tag them with the current metadata. "
+                "The <b>Log</b> panel shows what happened.",
+                [self._dropzone_dock],
+                on_enter=self._reveal_dropzone,
+            ),
+            TourStep(
+                "You're ready",
+                "That's the tour. Re-open it any time from <b>Help → Show Tour</b>. Happy tagging!",
+            ),
+        ]
+
+    # -- settings persistence ----------------------------------------------
+
+    def _restore_settings(self):
+        """Populate widgets from saved config (tolerant of missing keys)."""
+        geom = self.config.window_geometry
+        if geom is not None:
+            self.setGeometry(*geom)
+        if self.config.watch_folder:
+            self.ledFolder.setText(self.config.watch_folder)
+        if self.config.temporary_file:
+            self.ledTemporaryLoc.setText(self.config.temporary_file)
+        if self.config.file_patterns:
+            self.ledFilePatterns.setText(self.config.file_patterns)
+        self.ledMetaSuffix.setText(self.config.metadata_suffix)
+        self.cbRecursiveWatch.setChecked(self.config.recursive_watching)
+
+    def closeEvent(self, event):
+        self.config.window_geometry = self.frameGeometry().getCoords()
+        self.config.watch_folder = self.ledFolder.text()
+        self.config.temporary_file = self.ledTemporaryLoc.text()
+        self.config.file_patterns = self.ledFilePatterns.text()
+        self.config.metadata_suffix = self._metadata_suffix()
+        self.config.recursive_watching = self.cbRecursiveWatch.isChecked()
+        self.config.multiview_layout = self._form_multiview.get_layout()
+        self.config.save_settings()
+
+        super().closeEvent(event)
+        logging.getLogger().removeHandler(self._log_handler)
+        # Drop the handler from logging's registry so logging.shutdown() at
+        # interpreter exit does not touch the now-deleted Qt C++ object.
+        self._log_handler.close()
+
+    # -- tree / yaml synchronization ---------------------------------------
+
+    def _validate_yaml(self):
+        """Reflect YAML validity on the tab button (document is always valid when maintained via the UI)."""
+        self._set_yaml_status(True)
+        return True
+
+    def _set_yaml_status(self, valid: bool, detail: str | None = None) -> None:
+        """Tint the YAML tab green/red to signal syntax validity."""
+        self._view_tabs.setTabTextColor(_IDX_YAML, QtGui.QColor(_YAML_OK if valid else _YAML_ERR))
+        self._view_tabs.setTabToolTip(_IDX_YAML, "YAML is valid" if valid else f"YAML syntax error:\n{detail}")
+
+    def _populate_yamltextfield(self):
+        """Sync both multiviews from the parameters dict."""
+        self._text_multiview.set_document(self.parameters)
+        self._form_multiview.set_document(self.parameters)
+
+    @QtCore.pyqtSlot(dict)
+    def _on_form_multiview_changed(self, data: dict) -> None:
+        self.parameters = data
+        self._text_multiview.set_document(data)
+
+    @QtCore.pyqtSlot(dict)
+    def _on_text_multiview_changed(self, data: dict) -> None:
+        self.parameters = data
+        self._form_multiview.set_document(data)
+        self._set_yaml_status(True)
+        if self.btnUseTemporaryFile.isChecked():
+            self._hidden_write_temporary_file()
+
+    # -- menus / docks -----------------------------------------------------
+
+    def _setup_menus(self) -> None:
+        """Build Template / View menus (reused by the toolbar) and shortcuts."""
+        bar = self.menuBar()
+
+        self._template_menu = bar.addMenu("&Template")
+        act_store = self._template_menu.addAction("&Save Template")
+        act_store.setShortcut(QtGui.QKeySequence("Ctrl+S"))
+        act_store.triggered.connect(lambda: self._focus_save(self._templates_dock, self._templates_panel))
+
+        self._view_menu = bar.addMenu("&View")
+        self._dropzone_toggle = self._dropzone_dock.toggleViewAction()
+        self._dropzone_toggle.setText("&Drop files")
+        self._view_menu.addAction(self._dropzone_toggle)
+        self._log_toggle = self._log_dock.toggleViewAction()
+        self._log_toggle.setText("&Log")
+        self._log_toggle.setShortcut(QtGui.QKeySequence("Ctrl+L"))
+        self._view_menu.addAction(self._log_toggle)
+        self._view_menu.addSeparator()
+        self._view_menu.addAction("Save &View", lambda: self._focus_save(self._views_dock, self._views_panel))
+
+        self._help_menu = bar.addMenu("&Help")
+        self._help_menu.addAction("Show &Tour", self._start_tour)
+
+    def _focus_save(self, dock: QtWidgets.QDockWidget, panel: LibraryPanel) -> None:
+        """Reveal a library dock and focus its name field (Save shortcut)."""
+        dock.show()
+        dock.raise_()
+        panel.start_new()
+
+    def _setup_toolbar(self) -> None:
+        """Build the editor-centric top toolbar."""
+        tb = QtWidgets.QToolBar("Main")
+        tb.setObjectName("mainToolbar")
+        tb.setMovable(False)
+        tb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, tb)
+        self._toolbar = tb
+
+        # -- library sidebar toggle --
+        self._act_sidebar = QtGui.QAction("☰ Library", self, checkable=True)
+        self._act_sidebar.setChecked(True)
+        self._act_sidebar.setToolTip("Show or hide the library sidebar")
+        self._act_sidebar.toggled.connect(self._set_library_visible)
+        tb.addAction(self._act_sidebar)
+
+        # -- Form / YAML view switch: sits at the far left, above the sidebar --
+        self._view_tabs = QtWidgets.QTabBar()
+        self._view_tabs.setDocumentMode(True)
+        self._view_tabs.setDrawBase(False)
+        self._view_tabs.addTab("⊞ Form")
+        self._view_tabs.addTab("{ } YAML")
+        self._view_tabs.setTabToolTip(_IDX_FORM, "Structured form editor")
+        self._view_tabs.setTabToolTip(_IDX_YAML, "Raw YAML editor")
+        self._view_tabs.currentChanged.connect(self._stack.setCurrentIndex)
+        tb.addWidget(self._view_tabs)
+        tb.addSeparator()
+
+        # -- watch controls --
+        tb.addWidget(QtWidgets.QLabel("Folder: "))
+        self.ledFolder.setMinimumWidth(280)
+        self.ledFolder.setPlaceholderText("Folder to watch for new files")
+        self.ledFolder.setToolTip("Folder watched for newly created files")
+        tb.addWidget(self.ledFolder)
+        tb.addWidget(self.btnBrowse)
+        tb.addWidget(self.btnActivate)
+
+        # -- push panel toggles to the right --
+        spacer = QtWidgets.QWidget()
+        spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
+        tb.addWidget(spacer)
+
+        tb.addAction(self._dropzone_toggle)
+        tb.addAction(self._log_toggle)
+
+        self._set_yaml_status(True)
+
+    def _setup_settings_toolbar(self) -> None:
+        """Second toolbar row: watch patterns/recursive and the live-file controls."""
+        self.addToolBarBreak(QtCore.Qt.ToolBarArea.TopToolBarArea)
+        tb = QtWidgets.QToolBar("Watch & live file")
+        tb.setObjectName("settingsToolbar")
+        tb.setMovable(False)
+        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, tb)
+        self._settings_toolbar = tb
+
+        tb.addWidget(QtWidgets.QLabel("Patterns: "))
+        self.ledFilePatterns.setMinimumWidth(150)
+        self.ledFilePatterns.setToolTip("Comma-separated, e.g. *.csv,*.tsv (empty = all files)")
+        tb.addWidget(self.ledFilePatterns)
+        tb.addWidget(self.cbRecursiveWatch)
+        tb.addSeparator()
+        tb.addWidget(QtWidgets.QLabel("Suffix: "))
+        self.ledMetaSuffix.setMaximumWidth(120)
+        self.ledMetaSuffix.setToolTip("Ending appended to the sidecar file name (empty = .meta.yaml)")
+        tb.addWidget(self.ledMetaSuffix)
+        tb.addSeparator()
+        tb.addWidget(QtWidgets.QLabel("Live file: "))
+        self.ledTemporaryLoc.setMinimumWidth(240)
+        tb.addWidget(self.ledTemporaryLoc)
+        tb.addWidget(self.btnSelectTemporaryFile)
+        tb.addWidget(self.btnUseTemporaryFile)
+
+    def _toggle_view(self) -> None:
+        """Flip between Form and YAML (bound to Ctrl+Tab)."""
+        nxt = _IDX_YAML if self._view_tabs.currentIndex() == _IDX_FORM else _IDX_FORM
+        self._view_tabs.setCurrentIndex(nxt)
+
+    def _set_library_visible(self, visible: bool) -> None:
+        """Show or hide the whole library sidebar (Snippets/Templates/Views)."""
+        for dock in (self._snippet_dock, self._templates_dock, self._views_dock):
+            dock.setVisible(visible)
+        if visible:
+            self._snippet_dock.raise_()
+
+    def _setup_snippet_dock(self) -> None:
+        """Create the snippets dock (part of the always-visible library rail)."""
+        self._pending_snippet: dict | None = None
+        self._snippet_panel = LibraryPanel(SnippetsListView(), "Save snippet")
+        self._snippet_list = self._snippet_panel.list_view
+        self._snippet_list.setToolTip(
+            "Double-click to add (keep existing) · Ctrl+double-click to overwrite · drag to apply"
+        )
+        self._snippet_panel.activated.connect(self._apply_snippet)
+        self._snippet_panel.delete_requested.connect(self._delete_snippet)
+        self._snippet_panel.save_requested.connect(self._save_named_snippet)
+        # The Save button has nothing to store on its own, so seed the pending
+        # snippet from the active multi-view panel (the ⊕ source) on each press.
+        self._snippet_panel.save_started.connect(self._seed_snippet_from_active_panel)
+
+        self._snippet_dock = QtWidgets.QDockWidget("Snippets", self)
+        self._snippet_dock.setObjectName("snippetDock")
+        self._snippet_dock.setWidget(self._snippet_panel)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self._snippet_dock)
+        self._refresh_snippet_dock()
+
+    def _refresh_snippet_dock(self) -> None:
+        self._snippet_list.set_snippets(
+            {name: self.config.load_snippet(name) for name in self.config.snippet_names}
+        )
+
+    def _setup_library_docks(self) -> None:
+        """Create the Templates and Views sidebars, tabbed with Snippets."""
+        self._templates_panel = LibraryPanel(EditableListView(), "Save current as template")
+        self._templates_panel.activated.connect(self._apply_template)
+        self._templates_panel.save_requested.connect(self.store_template)
+        self._templates_panel.delete_requested.connect(self._delete_template)
+        self._templates_dock = QtWidgets.QDockWidget("Templates", self)
+        self._templates_dock.setObjectName("templatesDock")
+        self._templates_dock.setWidget(self._templates_panel)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self._templates_dock)
+
+        self._views_panel = LibraryPanel(EditableListView(), "Save current view")
+        self._views_panel.activated.connect(self._apply_view)
+        self._views_panel.save_requested.connect(self.save_view)
+        self._views_panel.delete_requested.connect(self._delete_view)
+        self._views_dock = QtWidgets.QDockWidget("Views", self)
+        self._views_dock.setObjectName("viewsDock")
+        self._views_dock.setWidget(self._views_panel)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self._views_dock)
+
+        # Stack the three library panels as tabs in the left rail, tabs on top.
+        self.tabifyDockWidget(self._snippet_dock, self._templates_dock)
+        self.tabifyDockWidget(self._templates_dock, self._views_dock)
+        self.setTabPosition(
+            QtCore.Qt.DockWidgetArea.LeftDockWidgetArea,
+            QtWidgets.QTabWidget.TabPosition.North,
+        )
+        self.setDocumentMode(True)  # flat dock tabs, matching the Form/YAML tabs
+        # The tab already labels each panel — drop the duplicate dock title bar.
+        for dock in (self._snippet_dock, self._templates_dock, self._views_dock):
+            dock.setTitleBarWidget(QtWidgets.QWidget(dock))
+        # Equal minimum width so the rail keeps a stable width across tabs.
+        for panel in (self._snippet_panel, self._templates_panel, self._views_panel):
+            panel.setMinimumWidth(200)
+
+        # The rail stays visible; Snippets is the default active tab.
+        self._snippet_dock.raise_()
+
+        self._refresh_templates_panel()
+        self._refresh_views_panel()
+
+    def _refresh_templates_panel(self) -> None:
+        self._templates_panel.set_items(self.config.template_names)
+
+    def _refresh_views_panel(self) -> None:
+        self._views_panel.set_items(self.config.view_names)
+
+    def _setup_dropzone(self) -> None:
+        """Create the (hidden by default) file drop zone below the library rail."""
+        self._dropzone = LabelDropzone()
+        self._dropzone.files_submitted.connect(self._on_files_dropped)
+        self._dropzone_dock = QtWidgets.QDockWidget("Drop files", self)
+        self._dropzone_dock.setObjectName("dropzoneDock")
+        self._dropzone_dock.setWidget(self._dropzone)
+        self.splitDockWidget(self._snippet_dock, self._dropzone_dock, QtCore.Qt.Orientation.Vertical)
+        self._dropzone_dock.hide()
+
+    def _on_files_dropped(self, paths: list[str]) -> None:
+        """Tag each dropped file; recurse into dropped folders (honoring file patterns).
+
+        A directly dropped file is tagged regardless of the pattern filter; files
+        found inside a dropped folder must match it. ``.meta.yaml`` files are
+        skipped.
+        """
+        patterns = self._file_pattern_list()
+        suffix = self._metadata_suffix()
+        targets: list[Path] = []
+        for path in paths:
+            p = Path(path)
+            if p.is_file() and not p.name.endswith(suffix):
+                targets.append(p)
+            elif p.is_dir():
+                targets += [
+                    child
+                    for child in sorted(p.rglob("*"))
+                    if child.is_file()
+                    and not child.name.endswith(suffix)
+                    and self._matches_pattern(child.name, patterns)
+                ]
+        for target in targets:
+            self._file_created(str(target))
+        logger.info("tagged %d dropped file(s)", len(targets))
+
+    def _file_pattern_list(self) -> list[str] | None:
+        """The watch file patterns as a list, or None when none are set (= all)."""
+        text = self.ledFilePatterns.text().strip()
+        return [p.strip() for p in text.split(",") if p.strip()] or None
+
+    def _metadata_suffix(self) -> str:
+        """Sidecar file-name ending; falls back to ``.meta.yaml`` when unusable.
+
+        The field validator blocks illegal keystrokes, but ``setText`` (restoring a
+        hand-edited or older config) bypasses it, so unsafe characters are stripped
+        here too. A leading dot is enforced so the suffix reads as a file extension
+        (``meta.yaml`` → ``.meta.yaml``) rather than fusing onto the file name. An
+        empty result would make the sidecar path equal the source file and overwrite
+        it, so the default is substituted for a blank/stripped field.
+        """
+        safe = re.sub(r"[^A-Za-z0-9._-]", "", self.ledMetaSuffix.text()).lstrip(".")
+        return f".{safe}" if safe else ".meta.yaml"
+
+    @staticmethod
+    def _matches_pattern(name: str, patterns: list[str] | None) -> bool:
+        return patterns is None or any(fnmatch.fnmatch(name, pat) for pat in patterns)
+
+    # -- snippet management ------------------------------------------------
+
+    @QtCore.pyqtSlot(dict, str)
+    def capture_snippet(self, data: dict, name_hint: str = "") -> None:
+        """Stash a captured subtree and focus the snippet name field to save it."""
+        self._pending_snippet = data
+        self._snippet_dock.show()
+        self._snippet_dock.raise_()
+        self._snippet_panel.prime(name_hint or _default_snippet_name(data))
+
+    def _seed_snippet_from_active_panel(self) -> None:
+        """Capture the active multi-view panel so the Save button has data to store.
+
+        The snippet panel's Save button starts inline naming but carries nothing
+        itself; pull the subtree (or leaf) from the active panel — the same thing
+        that panel's ⊕ button would capture.
+        """
+        view = self._form_multiview.active_view
+        if view is None:
+            return
+        data, _path = view.capture_payload()
+        self._pending_snippet = data
+
+    def _save_named_snippet(self, name: str) -> None:
+        data = self._pending_snippet
+        if data is None:
+            return
         try:
-            self.setGeometry(*self.config._config["windowGeometry"])
-            self.ledFolder.setText(self.config._config["watchFolder"])
-            self.ledTemporaryLoc.setText(self.config._config["temporaryFile"])
-            self.ledFilePatterns.setText(self.config._config["filePatterns"])
-            self.cbRecursiveWatch.setChecked(bool(self.config._config["recursiveWatching"]))
-        except KeyError:
-            print("failed")
+            self.config.save_snippet(self._unique_snippet_name(name), dump_yaml(data))
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Save Snippet Failed", str(exc))
+            return
+        self._pending_snippet = None
+        self._refresh_snippet_dock()
 
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.reenable_temporary_file_watch)
+    def _apply_snippet(self, name: str) -> None:
+        """Apply snippet *name* — plain double-click adds, Ctrl+double-click overwrites."""
+        ctrl = bool(QtWidgets.QApplication.keyboardModifiers() & QtCore.Qt.KeyboardModifier.ControlModifier)
+        self._apply_snippet_text(self.config.load_snippet(name), overwrite=ctrl)
 
-    @QtCore.pyqtSlot()
-    def on_tree_data_change(self):
-        mask_dict = self.template_tree.to_dict()
-        if mask_dict:
-            self.parameters = mask_dict
-            self.populate_yamltextfield()
-        else:
-            self.populate_mask()
-            logger.error("Value types can not be changed in the mask. Please use the text field or editor.")
+    def _apply_snippet_text(self, text: str, overwrite: bool = False) -> None:
+        """Merge a snippet (YAML text) into the document.
 
-    def validate_yaml(self):
-        """Change color of raw yaml text field according to validation"""
-        # yaml_error = linter.run(self.yamlText.toPlainText(),
-        # config.YamlLintConfig(content=yaml_config_str))
-        yaml_error = linter.get_syntax_error(self.yamlText.toPlainText())
-        if yaml_error is None:
-            self.yamlText.setStyleSheet("background-color: rgb(144, 238, 144);")
-            return True
-        else:
-            self.yamlText.setStyleSheet("background-color: rgb(255, 106, 106);")
-            return False
+        Non-destructive by default (adds only what's missing); *overwrite* lets
+        the snippet win on conflicts. The snippet is path-anchored, so it lands
+        at its origin.
+        """
+        data = parse_yaml(text)
+        if not isinstance(data, dict):
+            return
+        merge = overwrite_merge if overwrite else non_destructive_merge
+        self.parameters = merge(self.parameters or {}, data)
+        self._populate_yamltextfield()
+        self._form_multiview.set_document(self.parameters)
 
-    def act_on_yaml_change(self):
-        """Update mask on change in raw yaml text field"""
-        if self.validate_yaml():
-            self.parameters = yaml.load(self.yamlText.toPlainText(), Loader=yaml.FullLoader)
-            if isinstance(self.parameters, dict):
-                self.populate_mask()
-                if self.btnUseTemporaryFile.isChecked():
-                    self.hidden_write_temporary_file()
+    def _unique_snippet_name(self, base: str) -> str:
+        existing = set(self.config.snippet_names)
+        if base not in existing:
+            return base
+        i = 2
+        while f"{base}-{i}" in existing:
+            i += 1
+        return f"{base}-{i}"
 
-    # def __handleTextChanged(self, text):
-    #     #print("fired handled text")
-    #     if not self.hasFocus():
-    #         self._before = text
+    def _delete_snippet(self, name: str) -> None:
+        if (
+            QtWidgets.QMessageBox.question(self, "Delete Snippet", f'Delete snippet "{name}"?')
+            != QtWidgets.QMessageBox.StandardButton.Yes
+        ):
+            return
+        self.config.delete_snippet(name)
+        self._refresh_snippet_dock()
 
-    # def __handleEditingFinished(self):
-    #     #print("fired finished editing")
-    #     before, after = self._before, self.text()
-    #     if before != after:
-    #         self._before = after
-    #         self.textModified.emit(before, after)
+    # -- view (layout) management ------------------------------------------
 
-    def check_input(self):
-        """Extended input checking of raw yaml input possibly schema"""
+    def save_view(self, name: str) -> None:
+        """Save the current multi-view tiling under *name* (from the sidebar)."""
+        try:
+            self.config.save_view(name, self._form_multiview.get_layout())
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Save View Failed", str(exc))
+            return
+        self._refresh_views_panel()
 
-    def load_template(self):
-        """Open the dialog for loading templates"""
-        template_dialog = TemplateDialog(TemplateDialogType.Load)
-        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
+    def _apply_view(self, name: str) -> None:
+        """Load the named layout *name* into the multi-view."""
+        try:
+            layout = self.config.load_view(name)
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Load View Failed", str(exc))
+            return
+        self._form_multiview.set_layout(layout)
 
-        if template_dialog.exec():
-            yaml_text = self.config.load_template(template_dialog.template_name)
-            self.parameters = yaml.load(yaml_text, Loader=yaml.FullLoader)
-            self.populate_yamltextfield()
-            self.populate_mask()
+    def _delete_view(self, name: str) -> None:
+        if (
+            QtWidgets.QMessageBox.question(self, "Delete View", f'Delete view "{name}"?')
+            != QtWidgets.QMessageBox.StandardButton.Yes
+        ):
+            return
+        self.config.delete_view(name)
+        self._refresh_views_panel()
 
-    # @QtCore.pyqtSlot(str)
-    # def load_template(self, filepath):
-    #     """Open the dialog for loading templates"""
-    #     self.template_dialog.setWindowTitle("Load Template")
-    #     try:
-    #         with open(templates_file, encoding="utf-8") as file:
-    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-    #     except FileNotFoundError:
-    #         self.template_dialog.templates = {}
+    # -- template management -----------------------------------------------
 
-    #     if not isinstance(self.template_dialog.templates, dict):
-    #         self.template_dialog.templates = {}
+    def _apply_template(self, name: str) -> None:
+        """Load the template *name* into the editor."""
+        try:
+            yaml_text = self.config.load_template(name)
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Load Template Failed", str(exc))
+            return
+        self.parameters = parse_yaml(yaml_text)
+        self._populate_yamltextfield()
+        self._form_multiview.set_document(self.parameters)
 
-    #     self.template_dialog.listWidget.clear()
-    #     self.template_dialog.lineEdit.clear()
-    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-    #     if self.template_dialog.exec_() and hasattr(self.template_dialog, "parameters"):
-    #         self.parameters = self.template_dialog.parameters
-    #         self.populate_mask()
-    #         self.populate_yamltextfield()
+    def store_template(self, name: str) -> None:
+        """Save the current document as a template under *name* (from the sidebar)."""
+        try:
+            self.config.save_template(name, dump_yaml(self.parameters))
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Store Template Failed", str(exc))
+            return
+        self._refresh_templates_panel()
 
-    # @QtCore.pyqtSlot(str)
-    # def store_template(self, filepath):
-    #     """Open the dialog for storing templates"""
-    #     self.template_dialog.setWindowTitle("Store Template")
-    #     try:
-    #         with open(templates_file, encoding="utf-8") as file:
-    #             self.template_dialog.templates = yaml.load(file, Loader=yaml.FullLoader)
-    #     except FileNotFoundError:
-    #         self.template_dialog.templates = {}
+    def _delete_template(self, name: str) -> None:
+        if (
+            QtWidgets.QMessageBox.question(self, "Delete Template", f'Delete template "{name}"?')
+            != QtWidgets.QMessageBox.StandardButton.Yes
+        ):
+            return
+        self.config.delete_template(name)
+        self._refresh_templates_panel()
 
-    #     if not isinstance(self.template_dialog.templates, dict):
-    #         self.template_dialog.templates = {}
-
-    #     self.template_dialog.parameters = self.parameters
-    #     self.template_dialog.listWidget.clear()
-    #     self.template_dialog.lineEdit.clear()
-
-    #     self.template_dialog.listWidget.addItems(self.template_dialog.templates.keys())
-    #     self.template_dialog.exec_()
-
-    def store_template(self):
-        """Open the dialog for storing templates"""
-        template_dialog = TemplateDialog(TemplateDialogType.Store)
-        template_dialog.listWidget.addItems(self.config._config["templates"].keys())
-
-        content = self.yamlText.toPlainText()
-
-        if template_dialog.exec():
-            self.config.save_template(template_dialog.template_name, content)
+    # -- temporary file management -----------------------------------------
 
     def select_temporary_file(self):
-        """Open the dialog for selecting the temporary to be watched"""
-        # self.ledFolder.clear()  # In case there are any existing elements in the list
-
-        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", os.getenv("HOME"), "*.yaml")
-
-        if temporary_file:  # if user didn't pick a directory don't continue
+        """Open a file dialog to select the temporary YAML file."""
+        temporary_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "pushButton", str(Path.home()), "*.yaml")
+        if temporary_file:
             self.ledTemporaryLoc.setText(temporary_file)
-            self.write_temporary_file()
+            self._write_temporary_file()
             logger.info("changed temporary file to %s", temporary_file)
 
     def toggle_watch_temporary_file(self):
-        """Toggle temporary file watching"""
+        """Toggle temporary file watching."""
         temporary_file = self.ledTemporaryLoc.text()
         if self.btnUseTemporaryFile.isChecked():
             if temporary_file:
-                # create new instance of watcher potential
-                splitted = os.path.split(temporary_file)
-                path = os.path.join(*splitted[:-1])
-                file = splitted[-1]
-                self.temporary_file_monitor = FileMonitor(patterns=[file])
-                self.thread_temporary_file = QtCore.QThread(self)
-                self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
-                self.temporary_file_monitor.moveToThread(self.thread_temporary_file)
-
+                tmp = Path(temporary_file)
+                self._temporary_file_monitor = FileMonitor(str(tmp.parent), patterns=[tmp.name])
+                self._temporary_file_monitor.modify_signal.connect(self._temporary_file_changed)
                 self.btnUseTemporaryFile.setText("Do not use")
-                self.temporary_file_monitor.observer.schedule(
-                    self.temporary_file_monitor.event_handler, path, recursive=False
-                )  # permission problems with subfolders
-                self.temporary_file_monitor.observer.start()
+                self._temporary_file_monitor.start()
                 logger.info("watching %s", temporary_file)
             else:
                 self.btnUseTemporaryFile.setChecked(False)
 
         elif not self.btnUseTemporaryFile.isChecked():
             self.btnUseTemporaryFile.setText("Use")
-            self.temporary_file_monitor.observer.stop()
-
+            self._temporary_file_monitor.stop()
+            self._temporary_file_monitor.wait()
             logger.info("stop watching %s", temporary_file)
 
-    def temporary_file_changed(self):
-        with open(self.ledTemporaryLoc.text()) as f:
-            self.parameters = yaml.load(f.read(), Loader=yaml.FullLoader)
+    def _temporary_file_changed(self, _path: str = "") -> None:
+        try:
+            with open(self.ledTemporaryLoc.text()) as f:
+                self.parameters = parse_yaml(f.read())
+        except OSError as exc:
+            QtWidgets.QMessageBox.warning(self, "Temporary File Error", str(exc))
+            return
         if self.parameters is None:
             self.parameters = {}
-        self.populate_yamltextfield()
-        self.populate_mask()
+        self._populate_yamltextfield()
+        self._form_multiview.set_document(self.parameters)
 
-    def write_temporary_file(self):
-        with open(self.ledTemporaryLoc.text(), "w", encoding="utf-8") as metadata_file:
-            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
+    def _write_temporary_file(self):
+        dump_yaml_to_file(self.parameters, self.ledTemporaryLoc.text())
 
-    def hidden_write_temporary_file(self):
-        # prevent unintended reload
-        if not self.timer.isActive():
-            self.temporary_file_monitor.getEmitter().modify_signal.disconnect()
-        self.write_temporary_file()
-        self.timer.start(1000)
+    def _hidden_write_temporary_file(self):
+        """Write the temporary file while suppressing the file-change signal."""
+        if not self._temporary_write_timer.isActive():
+            self._temporary_file_monitor.modify_signal.disconnect()
+        self._write_temporary_file()
+        self._temporary_write_timer.start(1000)
 
     @QtCore.pyqtSlot()
-    def reenable_temporary_file_watch(self):
-        self.temporary_file_monitor.getEmitter().modify_signal.connect(self.temporary_file_changed)
-        self.timer.stop()
+    def _reenable_temporary_file_watch(self):
+        self._temporary_file_monitor.modify_signal.connect(self._temporary_file_changed)
+        self._temporary_write_timer.stop()
 
-    def enable_use(self):
-        """Enable use button"""
-        if os.path.exists(self.ledTemporaryLoc.text()):
+    def _enable_use(self):
+        """Enable the 'Use' button when the temporary file path is valid."""
+        if Path(self.ledTemporaryLoc.text()).exists():
             self.btnUseTemporaryFile.setEnabled(True)
         else:
             self.btnUseTemporaryFile.setDisabled(True)
 
+    # -- folder watching ---------------------------------------------------
+
     def browse_folder(self):
-        """Open the dialog for selecting the folder to be watched"""
-        # self.ledFolder.clear()  # In case there are any existing elements in the list
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")
-        # execute getExistingDirectory dialog and set the directory variable to be equal
-        # to the user selected directory
-        directory = os.sep.join(directory.split("/"))
-        if directory:  # if user didn't pick a directory don't continue
+        """Open a directory picker for the watched folder."""
+        directory = str(Path(QtWidgets.QFileDialog.getExistingDirectory(self, "pushButton")))
+        if directory:
             self.ledFolder.setText(directory)
             logger.info("changed watching folder to %s", directory)
 
-    def enable_activate(self):
-        """Enable activate button"""
-        if os.path.exists(self.ledFolder.text()):
+    def _enable_activate(self):
+        """Enable the Activate button when the folder path is valid."""
+        if Path(self.ledFolder.text()).exists():
             self.btnActivate.setEnabled(True)
         else:
             self.btnActivate.setDisabled(True)
 
     def toggle_watch(self):
-        """Toggle folder watching"""
+        """Toggle folder watching."""
         watch_directory = self.ledFolder.text()
         if self.btnActivate.isChecked():
             if watch_directory:
                 self.ledFolder.setDisabled(True)
                 self.ledFilePatterns.setDisabled(True)
                 self.cbRecursiveWatch.setDisabled(True)
-                # create new instance of watcher potential
+
                 if self.ledFilePatterns.text() == "":
                     patterns = None
                 else:
                     patterns = [p.strip() for p in self.ledFilePatterns.text().split(",")]
-                self.file_monitor = FileMonitor(watch_directory, patterns=patterns)
-                self.file_monitor.create_signal.connect(self.file_created)
+
+                self._file_monitor = FileMonitor(watch_directory, patterns=patterns)
+                self._file_monitor.create_signal.connect(self._file_created)
 
                 self.btnActivate.setText("Deactivate")
-                self.file_monitor.start()
+                self.setWindowTitle(f"Autotag Metadata — {watch_directory}")
+                self._file_monitor.start()
+
                 logger.info("watching %s", watch_directory)
             else:
                 self.btnActivate.setChecked(False)
 
         elif not self.btnActivate.isChecked():
             self.btnActivate.setText("Activate")
-            self.file_monitor.stop()
-            self.file_monitor.wait()
+            self.setWindowTitle("Autotag Metadata")
+            self._file_monitor.stop()
+            self._file_monitor.wait()
             self.ledFolder.setEnabled(True)
             self.ledFilePatterns.setEnabled(True)
             self.cbRecursiveWatch.setEnabled(True)
             logger.info("stop watching %s", watch_directory)
 
-    def _on_files_submitted(self, paths):
-        """Handle files dropped onto the dropzone"""
-        for path in paths:
-            self.file_created(path)
-
-    def file_created(self, msg):
-        """Create the metadata file with timestamp and hash"""
-        if not msg.endswith(".meta.yaml"):  # metadata files
+    def _file_created(self, msg):
+        """Handle a newly created file — build and write metadata."""
+        suffix = self._metadata_suffix()
+        if not msg.endswith(suffix):
             logger.info("created %s", msg)
-            self.parameters["time metadata"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-            self.parameters["measurement file name"] = os.path.split(msg)[-1]
+            result = build_metadata(msg, self.parameters)
+            if result is not None:
+                write_metadata(msg, self.parameters, suffix)
 
-            hash_str = self.hash_file(msg)
-            self.parameters["measurement file sha512"] = hash_str
+    # -- logging -----------------------------------------------------------
 
-            self.write_metadata(msg)
-
-    def hash_file(self, filename):
-        """Generate sha512 hash of the measurement file
-        TODO improve and remove recursion
-        """
-        try:
-            sha512_hash = hashlib.sha512()
-            with open(filename, "rb") as file:
-                # Read and update hash string value in blocks of 4K
-                for byte_block in iter(lambda: file.read(4096), b""):
-                    sha512_hash.update(byte_block)
-            return sha512_hash.hexdigest()
-        # while file is created it is locked or doesnot exist yet??
-        except (PermissionError, FileNotFoundError) as err:
-            time.sleep(1)
-            logger.exception("wrote metadata for %s", err)
-            return self.hash_file(filename)
-
-    def populate_yamltextfield(self):
-        """Change the text of the raw yaml field when field text is changed in the mask"""
-        # blocking of signals necessary to prevent regeneration of mask
-        # which leads to a loss of focus of the currently edited mask field
-        self.yamlText.blockSignals(True)
-        self.yamlText.setPlainText(yaml.dump(self.parameters, sort_keys=False, allow_unicode=True))
-        self.yamlText.blockSignals(False)
-
-    def recursively_something(self, parameters, parent=""):
-        """Rudimentary generation of the mask.
-        Should be replaced by a proper model in the future.
-        """
-        for key, val in parameters.items():
-            if isinstance(val, dict):
-                if parent == "":
-                    self.recursively_something(val, key)
-                else:
-                    self.recursively_something(val, f"{parent}.{key}")
-            else:
-                label = QtWidgets.QLabel(self.centralwidget)
-                lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-                if parent == "":
-                    label.setText(f"{key}")
-                    lineEdit.setObjectName(f"{key}")
-                else:
-                    label.setText(f"{parent}.{key}")
-                    lineEdit.setObjectName(f"{parent}.{key}")
-
-                self.verticalLayout_2.addWidget(label)
-                lineEdit.setText(str(val))
-                lineEdit.textChanged.connect(self.update_yaml)
-                self.verticalLayout_2.addWidget(lineEdit)
-
-    def update_yaml(self):
-        """Prepare the parameters dict and start population of the raw yaml text field"""
-        self.recurse_dict(self.parameters, self.sender().objectName().split("."), self.sender().text())
-        self.populate_yamltextfield()
-
-    def recurse_dict(self, deep_dict, listofkeys, text):
-        """
-        Recurse dict
-        Needs test case
-        """
-        if len(listofkeys) > 1:
-            self.recurse_dict(deep_dict[listofkeys[0]], listofkeys[1:], text)
-        else:
-            deep_dict[listofkeys[0]] = text
-
-    def populate_mask(self):
-        """Generate input tree from parameters dict"""
-        self.template_tree.import_from_dict(self.parameters)
-
-    def write_metadata(self, file):
-        """Write out metadata in file with file name corresponding to measurement file"""
-        with open(file + ".meta.yaml", "w", encoding="utf-8") as metadata_file:
-            yaml.dump(self.parameters, metadata_file, sort_keys=False, allow_unicode=True)
-        logger.info("wrote metadata for %s", file + ".meta.yaml")
-
-    def setup_logger(self):
-        self.log_handler = LogHandler(self)
-        self.log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-        logging.getLogger().addHandler(self.log_handler)
-        self.log_handler.new_record.connect(self.pteLogging.appendPlainText)
+    def _setup_logger(self):
+        self.pteLogging = QtWidgets.QPlainTextEdit()
         self.pteLogging.setReadOnly(True)
-        # logging level
+        self.pteLogging.setMaximumBlockCount(2000)
+
+        self._log_dock = QtWidgets.QDockWidget("Log", self)
+        self._log_dock.setObjectName("logDock")
+        self._log_dock.setWidget(self.pteLogging)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self._log_dock)
+        self.resizeDocks([self._log_dock], [140], QtCore.Qt.Orientation.Vertical)
+
+        self._log_handler = LogHandler(self)
+        self._log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        logging.getLogger().addHandler(self._log_handler)
+        self._log_handler.new_record.connect(self.pteLogging.appendPlainText)
         logging.getLogger().setLevel(logging.INFO)
         logger.info("Starting autotag-metadata")
 
-    def closeEvent(self, event):
-        self.config._config["windowGeometry"] = self.frameGeometry().getCoords()
-        self.config._config["watchFolder"] = self.ledFolder.text()
-        self.config._config["temporaryFile"] = self.ledTemporaryLoc.text()
-        self.config._config["filePatterns"] = self.ledFilePatterns.text()
-        self.config._config["recursiveWatching"] = self.cbRecursiveWatch.isChecked()
-        self.config.save_settings()
-
-        super().closeEvent(event)
-        logging.getLogger().removeHandler(self.log_handler)
-
 
 def run():
-    """Start Application"""
-    app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
+    """Start Application."""
+    # Silence a benign Qt-Wayland text-input protocol warning ("Got leave event
+    # for surface 0x0 ..."). It is emitted by Qt's Wayland plugin on focus
+    # changes, not by this app, and is pure console noise.
+    QtCore.QLoggingCategory.setFilterRules("qt.qpa.wayland.textinput.warning=false")
+    app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("Autotag Metadata")
+    app.setApplicationDisplayName("Autotag Metadata")
+    # The taskbar/window list uses the application icon; on Wayland the icon is
+    # matched via the desktop-file name (app_id) to an installed .desktop entry.
+    app.setWindowIcon(QtGui.QIcon(str(_ICON)))
+    app.setDesktopFileName("autotag-metadata")
+    form = AutotagApp()
+    form.show()
+    app.exec()
 
-    form = AutotagApp()  # We set the form to be our ExampleApp (design)
-    # Set up logging to use your widget as a handler
 
-    # log_handler = QPlainTextEditLogger()
-    # logger.addHandler(log_handler)
-    form.show()  # Show the form
-    app.exec()  # and execute the app
-
-
-if __name__ == "__main__":  # if we're running file directly and not importing it
-    run()  # run the main function
+if __name__ == "__main__":
+    run()

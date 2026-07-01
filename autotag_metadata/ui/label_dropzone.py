@@ -1,5 +1,4 @@
-"""Dropzone label"""
-
+"""Drop target for tagging individual files by dragging them in."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
@@ -19,31 +18,47 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
+
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QLabel
 
 
 class LabelDropzone(QLabel):
-    """A QLabel drop target that emits the list of dropped file paths."""
+    """A label that emits the local paths of files dropped onto it."""
 
-    files_submitted = pyqtSignal(list)
+    files_submitted = pyqtSignal(list)  # list[str] of local file paths
 
     def __init__(self, parent=None):
-        QLabel.__init__(self, parent)
+        super().__init__("Drop files here\nto write their .meta.yaml", parent)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setWordWrap(True)
         self.setAcceptDrops(True)
+        self.setMinimumHeight(64)
+        self._restyle(active=False)
+
+    def _restyle(self, active: bool) -> None:
+        role = QPalette.ColorRole.Highlight if active else QPalette.ColorRole.Mid
+        color = self.palette().color(role).name()
+        self.setStyleSheet(
+            f"QLabel {{ border: 2px dashed {color}; border-radius: 6px; margin: 4px; padding: 8px; }}"
+        )
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
+            self._restyle(active=True)
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
-    def dropEvent(self, event):
-        urls = event.mimeData().urls()
-        filelist = [url.toLocalFile() for url in urls if url.isLocalFile()]
+    def dragLeaveEvent(self, event):
+        self._restyle(active=False)
 
-        event.acceptProposedAction()
-        self.files_submitted.emit(filelist)
+    def dropEvent(self, event):
+        self._restyle(active=False)
+        paths = [url.toLocalFile() for url in event.mimeData().urls() if url.isLocalFile()]
+        if paths:
+            event.acceptProposedAction()
+            self.files_submitted.emit(paths)

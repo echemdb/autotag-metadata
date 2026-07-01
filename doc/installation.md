@@ -44,25 +44,32 @@ Multiple instances of the program can be launched to observe different folders.
 
 ## For developers
 
-Download the repository
+The project uses [pixi](https://pixi.sh) to manage all environments and tasks. Its configuration
+lives in `pyproject.toml` under `[tool.pixi.*]` — there is no separate `pixi.toml`.
+
+Download the repository and set up the environments:
 
 ```sh
 git clone ssh://git@github.com/echemdb/autotag-metadata.git
 cd autotag-metadata
+pixi install
 ```
 
-Install dependencies
+Run the application:
 
 ```sh
-conda env create --name autotag --file environment-dev.yml
-conda activate autotag_metadata-dev
-pip install -e .
+pixi run autotag-metadata
 ```
 
-Starting autotag-metadata
+Common development tasks:
 
 ```sh
-python -m autotag_metadata
+pixi run -e python-312 doctest   # run the test suite
+pixi run -e dev lint             # ruff check + format + isort
+pixi run -e dev doc              # build the Sphinx documentation
+pixi run -e packaging package    # build a PyInstaller binary
 ```
+
+In headless environments set `QT_QPA_PLATFORM=offscreen` before running the tests.
 
 To verify changes made to the documentation refer to the [readme](https://github.com/echemdb/autotag-metadata/blob/main/doc/README.md) in the repository.

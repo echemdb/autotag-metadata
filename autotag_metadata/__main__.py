@@ -1,8 +1,9 @@
+"""Package entry point — sets the desktop app process ID and launches the GUI."""
 # ********************************************************************
 #  This file is part of autotag-metadata.
 #
 #        Copyright (C) 2022      Albert Engstfeld
-#        Copyright (C) 2021-2022 Johannes Hermann
+#        Copyright (C) 2021-2026 Johannes Hermann
 #
 #  autotag-metadata is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -18,15 +19,12 @@
 #  along with autotag-metadata. If not, see
 #  <https://www.gnu.org/licenses/>.
 # ********************************************************************
-import sys
+
+import desktop_app
 
 from autotag_metadata import app
 
-
-if sys.platform == "win32":
-    import ctypes
-
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("autotag_metadata")
+desktop_app.set_process_appid("autotag_metadata")
 
 
 def main():
