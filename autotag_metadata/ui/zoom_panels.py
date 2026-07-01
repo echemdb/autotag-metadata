@@ -397,7 +397,9 @@ class ZoomTextView(_ZoomPanelBase):
         self._warning_bar.setText(f"Path '{self._path}' not found in document")
         self._warning_bar.setVisible(path_missing)
         self._syncing = True
-        text = dump_yaml(node) if found else ""
+        # An empty mapping/sequence dumps as flow-style "{}"/"[]"; show a blank
+        # canvas instead so the user starts typing block YAML from scratch.
+        text = dump_yaml(node) if found and node not in ({}, []) else ""
         if self._editor.toPlainText() != text:
             pos = self._editor.textCursor().position()
             self._editor.setPlainText(text)
