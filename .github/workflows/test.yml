@@ -36,6 +36,4 @@ jobs:
       - name: Install Qt EGL runtime
         run: sudo apt install libegl1
       - name: Run tests
-        env:
-          QT_QPA_PLATFORM: offscreen
         run: pixi run -e ${{ matrix.environment }} doctest

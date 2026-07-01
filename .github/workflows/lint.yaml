@@ -17,8 +17,8 @@ jobs:
       - name: pylint
         run: pixi run pylint
       - name: black
-        run: pixi run black --diff --check
+        run: pixi run format-check
       - name: isort
-        run: pixi run isort --check --diff
+        run: pixi run isort-check
       - name: typecheck
         run: pixi run typecheck

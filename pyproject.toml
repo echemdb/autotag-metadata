@@ -80,7 +80,7 @@ pytest-qt = "*"
 pytest-xdist = "*"
 
 [tool.pixi.feature.test.tasks]
-doctest = "pytest --doctest-modules autotag_metadata tests/"
+doctest = { cmd = "pytest --doctest-modules autotag_metadata tests/", env = { QT_QPA_PLATFORM = "offscreen" } }
 
 [tool.pixi.feature.lint.dependencies]
 ruff = "*"
@@ -92,6 +92,10 @@ black = "ruff format autotag_metadata"
 isort = "ruff check --select I autotag_metadata"
 typecheck = "ty check autotag_metadata"
 lint = { depends-on = ["pylint", "black", "isort", "typecheck"]  }
+# CI variants: fail (don't rewrite) on unformatted / unsorted code.
+format-check = "ruff format --check --diff autotag_metadata"
+isort-check = "ruff check --select I --diff autotag_metadata"
+lint-check = { depends-on = ["pylint", "format-check", "isort-check", "typecheck"] }
 
 [tool.pixi.feature.doc.dependencies]
 jupytext = "*"
