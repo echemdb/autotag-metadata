@@ -128,21 +128,26 @@
 </section>
 <section id="for-developers">
 <h2>For developers<a class="headerlink" href="#for-developers" title="Link to this heading"></a></h2>
-<p>Download the repository</p>
+<p>The project uses <a class="reference external" href="https://pixi.sh">pixi</a> to manage all environments and tasks. Its configuration
+lives in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> under <code class="docutils literal notranslate"><span class="pre">[tool.pixi.*]</span></code> — there is no separate <code class="docutils literal notranslate"><span class="pre">pixi.toml</span></code>.</p>
+<p>Download the repository and set up the environments:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>ssh://git@github.com/echemdb/autotag-metadata.git
 <span class="nb">cd</span><span class="w"> </span>autotag-metadata
+pixi<span class="w"> </span>install
 </pre></div>
 </div>
-<p>Install dependencies</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>autotag<span class="w"> </span>--file<span class="w"> </span>environment-dev.yml
-conda<span class="w"> </span>activate<span class="w"> </span>autotag_metadata-dev
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<p>Run the application:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>autotag-metadata
 </pre></div>
 </div>
-<p>Starting autotag-metadata</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>autotag_metadata
+<p>Common development tasks:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>python-312<span class="w"> </span>doctest<span class="w">   </span><span class="c1"># run the test suite</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>dev<span class="w"> </span>lint<span class="w">             </span><span class="c1"># ruff check + format + isort</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>dev<span class="w"> </span>doc<span class="w">              </span><span class="c1"># build the Sphinx documentation</span>
+pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>packaging<span class="w"> </span>package<span class="w">    </span><span class="c1"># build a PyInstaller binary</span>
 </pre></div>
 </div>
+<p>In headless environments set <code class="docutils literal notranslate"><span class="pre">QT_QPA_PLATFORM=offscreen</span></code> before running the tests.</p>
 <p>To verify changes made to the documentation refer to the <a class="reference external" href="https://github.com/echemdb/autotag-metadata/blob/main/doc/README.md">readme</a> in the repository.</p>
 </section>
 </section>
