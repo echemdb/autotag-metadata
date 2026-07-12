@@ -183,12 +183,26 @@ three-panel layout onto `curation`, `experimental`, and `system` at once:
 A saved view restores a multi-panel layout, each panel zoomed onto a different part of the document.
 ```
 
+### Editing in an external editor with the live file
+
+The **Live file** is a YAML file kept in sync with the editor. Press **Select…** to choose one,
+**Use** to watch it — edits made in an external, schema-aware editor then flow back into this
+document and vice versa — and **Open** to launch it in your default editor.
+
+```{figure} images/tour-15-5-the-live-file.png
+:alt: The live-file controls on the editor bar
+:width: 100%
+
+The live file mirrors the current metadata to a file so an external editor can validate it as you
+type.
+```
+
 ### Tagging on demand and watching the log
 
 Besides watching a folder, the **Drop files** toggle opens a drop zone. Drag files or folders onto
 it to tag them immediately with the current metadata, without activating a watch:
 
-```{figure} images/tour-15-5-drop-files-on-demand.png
+```{figure} images/tour-16-6-drop-files-on-demand.png
 :alt: The Drop files zone
 :width: 100%
 

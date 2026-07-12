@@ -52,6 +52,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-metadata-editor">The metadata editor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reusing-work-with-the-library">Reusing work with the Library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#zooming-splitting-and-views">Zooming, splitting, and Views</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#editing-in-an-external-editor-with-the-live-file">Editing in an external editor with the live file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tagging-on-demand-and-watching-the-log">Tagging on demand and watching the log</a></li>
 </ul>
 </li>
@@ -117,18 +118,18 @@ the Library side panel), the central metadata editor, and the Library panel on t
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#guided-walkthrough" id="id18">Guided walkthrough</a></p></li>
-<li><p><a class="reference internal" href="#the-toolbar" id="id19">The toolbar</a></p></li>
-<li><p><a class="reference internal" href="#menus-and-keyboard-shortcuts" id="id20">Menus and keyboard shortcuts</a></p></li>
-<li><p><a class="reference internal" href="#editing-metadata" id="id21">Editing metadata</a></p></li>
-<li><p><a class="reference internal" href="#multi-view-editing-distant-parts-at-once" id="id22">Multi-view: editing distant parts at once</a></p></li>
-<li><p><a class="reference internal" href="#snippets-templates-and-views" id="id23">Snippets, Templates, and Views</a></p></li>
-<li><p><a class="reference internal" href="#tagging-individual-files" id="id24">Tagging individual files</a></p></li>
-<li><p><a class="reference internal" href="#where-things-are-stored" id="id25">Where things are stored</a></p></li>
+<li><p><a class="reference internal" href="#guided-walkthrough" id="id19">Guided walkthrough</a></p></li>
+<li><p><a class="reference internal" href="#the-toolbar" id="id20">The toolbar</a></p></li>
+<li><p><a class="reference internal" href="#menus-and-keyboard-shortcuts" id="id21">Menus and keyboard shortcuts</a></p></li>
+<li><p><a class="reference internal" href="#editing-metadata" id="id22">Editing metadata</a></p></li>
+<li><p><a class="reference internal" href="#multi-view-editing-distant-parts-at-once" id="id23">Multi-view: editing distant parts at once</a></p></li>
+<li><p><a class="reference internal" href="#snippets-templates-and-views" id="id24">Snippets, Templates, and Views</a></p></li>
+<li><p><a class="reference internal" href="#tagging-individual-files" id="id25">Tagging individual files</a></p></li>
+<li><p><a class="reference internal" href="#where-things-are-stored" id="id26">Where things are stored</a></p></li>
 </ul>
 </nav>
 <section id="guided-walkthrough">
-<h2><a class="toc-backref" href="#id18" role="doc-backlink">Guided walkthrough</a><a class="headerlink" href="#guided-walkthrough" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Guided walkthrough</a><a class="headerlink" href="#guided-walkthrough" title="Link to this heading"></a></h2>
 <p>The quickest way to learn the interface is the <strong>built-in guided tour</strong>: open it any time from
 <strong>Help → Show Tour</strong>. It runs automatically the first time you start the program. The tour loads a
 small example document (an electrochemistry measurement), highlights each control in turn, and lets
@@ -267,15 +268,29 @@ three-panel layout onto <code class="docutils literal notranslate"><span class="
 </figcaption>
 </figure>
 </section>
+<section id="editing-in-an-external-editor-with-the-live-file">
+<h3>Editing in an external editor with the live file<a class="headerlink" href="#editing-in-an-external-editor-with-the-live-file" title="Link to this heading"></a></h3>
+<p>The <strong>Live file</strong> is a YAML file kept in sync with the editor. Press <strong>Select…</strong> to choose one,
+<strong>Use</strong> to watch it — edits made in an external, schema-aware editor then flow back into this
+document and vice versa — and <strong>Open</strong> to launch it in your default editor.</p>
+<figure class="align-default" id="id14">
+<a class="reference internal image-reference" href="_images/tour-15-5-the-live-file.png"><img alt="The live-file controls on the editor bar" src="_images/tour-15-5-the-live-file.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The live file mirrors the current metadata to a file so an external editor can validate it as you
+type.</span><a class="headerlink" href="#id14" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
 <section id="tagging-on-demand-and-watching-the-log">
 <h3>Tagging on demand and watching the log<a class="headerlink" href="#tagging-on-demand-and-watching-the-log" title="Link to this heading"></a></h3>
 <p>Besides watching a folder, the <strong>Drop files</strong> toggle opens a drop zone. Drag files or folders onto
 it to tag them immediately with the current metadata, without activating a watch:</p>
-<figure class="align-default" id="id14">
-<a class="reference internal image-reference" href="_images/tour-15-5-drop-files-on-demand.png"><img alt="The Drop files zone" src="_images/tour-15-5-drop-files-on-demand.png" style="width: 100%;" />
+<figure class="align-default" id="id15">
+<a class="reference internal image-reference" href="_images/tour-16-6-drop-files-on-demand.png"><img alt="The Drop files zone" src="_images/tour-16-6-drop-files-on-demand.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-text">The Drop files zone tags individual files on demand.</span><a class="headerlink" href="#id14" title="Link to this image"></a></p>
+<p><span class="caption-text">The Drop files zone tags individual files on demand.</span><a class="headerlink" href="#id15" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>The <strong>Log</strong> toggle reveals the log panel at the bottom, which records every tagging event, warning,
@@ -284,7 +299,7 @@ sections below cover each of these features in more detail.</p>
 </section>
 </section>
 <section id="the-toolbar">
-<h2><a class="toc-backref" href="#id19" role="doc-backlink">The toolbar</a><a class="headerlink" href="#the-toolbar" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">The toolbar</a><a class="headerlink" href="#the-toolbar" title="Link to this heading"></a></h2>
 <p><strong>Top row — actions</strong></p>
 <table class="docutils align-default">
 <thead>
@@ -336,7 +351,7 @@ sections below cover each of these features in more detail.</p>
 folder, so multiple windows are easy to tell apart.</p>
 </section>
 <section id="menus-and-keyboard-shortcuts">
-<h2><a class="toc-backref" href="#id20" role="doc-backlink">Menus and keyboard shortcuts</a><a class="headerlink" href="#menus-and-keyboard-shortcuts" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Menus and keyboard shortcuts</a><a class="headerlink" href="#menus-and-keyboard-shortcuts" title="Link to this heading"></a></h2>
 <p>Most actions are also reachable from the menu bar, and the common ones have shortcuts.</p>
 <p><strong>Template menu</strong></p>
 <table class="docutils align-default">
@@ -409,7 +424,7 @@ double-click to load, delete from the list), or through these <strong>menu dialo
 same saved entries.</p>
 </section>
 <section id="editing-metadata">
-<h2><a class="toc-backref" href="#id21" role="doc-backlink">Editing metadata</a><a class="headerlink" href="#editing-metadata" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Editing metadata</a><a class="headerlink" href="#editing-metadata" title="Link to this heading"></a></h2>
 <p>Type your metadata as <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a>. When the program starts the
 editor is empty; for example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experimentalist</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Max Mustermann</span>
@@ -435,7 +450,7 @@ numbers, a comma-separated field for simple lists, and a text field otherwise.</
 <a class="reference external" href="https://github.com/echemdb/metadata-schema/tree/main/examples">echemdb’s metadata-schema</a>.</p>
 </section>
 <section id="multi-view-editing-distant-parts-at-once">
-<h2><a class="toc-backref" href="#id22" role="doc-backlink">Multi-view: editing distant parts at once</a><a class="headerlink" href="#multi-view-editing-distant-parts-at-once" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Multi-view: editing distant parts at once</a><a class="headerlink" href="#multi-view-editing-distant-parts-at-once" title="Link to this heading"></a></h2>
 <p>Both the Form and YAML tabs are <strong>tiling multi-views</strong> and work the same way. A large metadata
 file often has fields you want to edit together but that live far apart in the document. Each
 panel can be focused on a sub-tree:</p>
@@ -453,12 +468,12 @@ level. Both tabs zoom identically, so a click resolves the same path in either v
 <p>All panels share one document, so a change in one is reflected in the others immediately. When
 more than one panel is open, the <strong>active panel</strong> (the one you are working in, and the source for
 its <strong>⊕</strong> snippet button) is shown with a highlighted border.</p>
-<figure class="align-default" id="id15">
+<figure class="align-default" id="id16">
 <a class="reference internal image-reference" href="_images/placeholder_multiview_active_panel.png"><img alt="The tiling multi-view with several panels" src="_images/placeholder_multiview_active_panel.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-text">The multi-view tiling several panels onto different paths of the same document; the active panel
-is outlined. <em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id15" title="Link to this image"></a></p>
+is outlined. <em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id16" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <section id="path-syntax">
@@ -492,16 +507,16 @@ is outlined. <em>(Placeholder — to be replaced with a screenshot.)</em></span>
 </section>
 </section>
 <section id="snippets-templates-and-views">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">Snippets, Templates, and Views</a><a class="headerlink" href="#snippets-templates-and-views" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Snippets, Templates, and Views</a><a class="headerlink" href="#snippets-templates-and-views" title="Link to this heading"></a></h2>
 <p>Open the <strong>Library</strong> panel (☰ Library) to reuse work. It has three tabs, and all three behave the
 same way: click <strong>Save</strong> to add an entry — you name it <strong>inline in the list</strong> — and double-click an
 entry to use it. Right-click (or use the delete action) to remove one.</p>
-<figure class="align-default" id="id16">
+<figure class="align-default" id="id17">
 <a class="reference internal image-reference" href="_images/placeholder_library_panel.png"><img alt="The Library panel with Snippets, Templates and Views tabs" src="_images/placeholder_library_panel.png" style="width: 60%;" />
 </a>
 <figcaption>
 <p><span class="caption-text">The Library panel: Snippets, Templates, and Views, each named inline in the list.
-<em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id16" title="Link to this image"></a></p>
+<em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id17" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <section id="templates">
@@ -538,15 +553,15 @@ and load it to return to that arrangement later.</p>
 </section>
 </section>
 <section id="tagging-individual-files">
-<span id="id1"></span><h2><a class="toc-backref" href="#id24" role="doc-backlink">Tagging individual files</a><a class="headerlink" href="#tagging-individual-files" title="Link to this heading"></a></h2>
+<span id="id1"></span><h2><a class="toc-backref" href="#id25" role="doc-backlink">Tagging individual files</a><a class="headerlink" href="#tagging-individual-files" title="Link to this heading"></a></h2>
 <p>Besides watching a folder, you can tag files on demand. Enable the <strong>Drop files</strong> panel from the
 toolbar and drag one or more files (or whole folders) onto it.</p>
-<figure class="align-default" id="id17">
+<figure class="align-default" id="id18">
 <a class="reference internal image-reference" href="_images/placeholder_drop_zone.png"><img alt="The Drop files panel" src="_images/placeholder_drop_zone.png" style="width: 60%;" />
 </a>
 <figcaption>
 <p><span class="caption-text">The Drop files panel: drop files or folders here to tag them on demand.
-<em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id17" title="Link to this image"></a></p>
+<em>(Placeholder — to be replaced with a screenshot.)</em></span><a class="headerlink" href="#id18" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>Each dropped file gets a
@@ -555,7 +570,7 @@ the <strong>Patterns</strong> filter is applied to their contents; files you dro
 of the pattern. Existing <code class="docutils literal notranslate"><span class="pre">.metadata.yaml</span></code> files are skipped.</p>
 </section>
 <section id="where-things-are-stored">
-<h2><a class="toc-backref" href="#id25" role="doc-backlink">Where things are stored</a><a class="headerlink" href="#where-things-are-stored" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Where things are stored</a><a class="headerlink" href="#where-things-are-stored" title="Link to this heading"></a></h2>
 <p>Settings and your saved entries live under <code class="docutils literal notranslate"><span class="pre">~/.config/autotag-metadata/</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">~/.</span><span class="n">config</span><span class="o">/</span><span class="n">autotag</span><span class="o">-</span><span class="n">metadata</span><span class="o">/</span>
     <span class="n">config</span><span class="o">.</span><span class="n">toml</span>      <span class="n">window</span><span class="o">/</span><span class="n">folder</span> <span class="n">settings</span> <span class="o">+</span> <span class="n">the</span> <span class="n">template</span><span class="o">/</span><span class="n">snippet</span><span class="o">/</span><span class="n">view</span> <span class="n">index</span>
