@@ -49,7 +49,7 @@ unchanged. The screenshots below reproduce that tour step by step.
 The tour opens with the example document already loaded in the editor, so every following step has
 something real to act on.
 
-```{figure} images/tour-00-welcome-to-autotag-metadata.png
+```{figure} images/tour-welcome.png
 :alt: The welcome step of the guided tour
 :width: 100%
 
@@ -69,7 +69,7 @@ The top toolbar reads left to right as the *source → filter → output* pipeli
    `.metadata.yaml`, or type a custom ending (e.g. `.ec-lab.metadata.yaml`) to distinguish sidecar
    families.
 
-```{figure} images/tour-01-1-choose-a-folder-to-watch.png
+```{figure} images/tour-choose-folder.png
 :alt: Choosing the folder to watch
 :width: 100%
 
@@ -85,7 +85,7 @@ The centre of the window is the editor, with two interchangeable views selected 
 The **Form** tab renders the metadata as editable fields grouped into collapsible sections that
 mirror the document structure:
 
-```{figure} images/tour-05-3-2-the-form-editor.png
+```{figure} images/tour-form-editor.png
 :alt: The structured Form editor
 :width: 100%
 
@@ -95,7 +95,7 @@ lists of mappings (such as electrode entries) get a `[index] name` heading per i
 
 The **YAML** tab shows the same document as raw text with syntax highlighting:
 
-```{figure} images/tour-06-3-3-the-yaml-editor.png
+```{figure} images/tour-yaml-editor.png
 :alt: The raw YAML editor
 :width: 100%
 
@@ -107,7 +107,7 @@ hover the tab for the parser's error message. Fix the indentation (or other mist
 indicator clears. In the tour, a line under `system.electrodes` is deliberately over-indented so
 you can see — and resolve — the error:
 
-```{figure} images/tour-07-3-4-fixing-a-syntax-error.png
+```{figure} images/tour-fixing-syntax-error.png
 :alt: A highlighted YAML syntax error
 :width: 100%
 
@@ -121,7 +121,7 @@ The **☰ Library** button toggles a side panel with three tabs — **Snippets**
 **Views**. Each tab works the same way: click **Save** to add an entry (named inline in the list)
 and double-click an entry to apply it.
 
-```{figure} images/tour-09-4-2-the-library-panel.png
+```{figure} images/tour-library-panel.png
 :alt: The Library panel with its three tabs
 :width: 100%
 
@@ -132,7 +132,7 @@ panel layouts).
 A **template** is a complete document. Double-click one to load it as the whole editor contents —
 ideal for starting a new measurement from a known structure:
 
-```{figure} images/tour-10-4-3-load-a-template.png
+```{figure} images/tour-load-template.png
 :alt: Loading a template
 :width: 100%
 
@@ -143,7 +143,7 @@ A **snippet** is a *part* of a document — a sub-tree anchored to its original 
 to merge it in **non-destructively**: existing values are kept, missing keys added, and list items
 matched by `name` so components are enriched rather than duplicated:
 
-```{figure} images/tour-11-4-4-extend-with-a-snippet.png
+```{figure} images/tour-extend-snippet.png
 :alt: Applying a snippet
 :width: 100%
 
@@ -156,7 +156,7 @@ without disturbing the existing one.
 Both editors are **tiling multi-views**. Every Form row carries a **⤢** button on the right that
 zooms the panel onto that row's sub-tree or value; the header's **↑** steps back up:
 
-```{figure} images/tour-12-4-5-zoom-into-a-subtree.png
+```{figure} images/tour-zoom-subtree.png
 :alt: Zooming a panel into a subtree
 :width: 100%
 
@@ -166,7 +166,7 @@ Zoom a panel onto any sub-tree with **⤢**; the header shows the current path.
 Click **⊢** (split right) or **⊟** (split down) on a panel header to open a second panel, so two
 distant parts of the document are editable side by side — each panel zooms independently:
 
-```{figure} images/tour-13-4-6-split-into-panels.png
+```{figure} images/tour-split-panels.png
 :alt: Splitting the Form into two panels
 :width: 100%
 
@@ -176,7 +176,7 @@ Split a panel with **⊢** / **⊟** to edit two parts of the document at once.
 A **view** remembers how the Form is tiled. Double-click one to restore that arrangement — here a
 three-panel layout onto `curation`, `experimental`, and `system` at once:
 
-```{figure} images/tour-14-4-7-save-the-layout-as-a-view.png
+```{figure} images/tour-save-view.png
 :alt: Restoring a saved multi-panel view
 :width: 100%
 
@@ -189,7 +189,7 @@ The **Live file** is a YAML file kept in sync with the editor. Press **Select…
 **Use** to watch it — edits made in an external, schema-aware editor then flow back into this
 document and vice versa — and **Open** to launch it in your default editor.
 
-```{figure} images/tour-15-5-the-live-file.png
+```{figure} images/tour-live-file.png
 :alt: The live-file controls on the editor bar
 :width: 100%
 
@@ -202,7 +202,7 @@ type.
 Besides watching a folder, the **Drop files** toggle opens a drop zone. Drag files or folders onto
 it to tag them immediately with the current metadata, without activating a watch:
 
-```{figure} images/tour-16-6-drop-files-on-demand.png
+```{figure} images/tour-drop-files.png
 :alt: The Drop files zone
 :width: 100%
 

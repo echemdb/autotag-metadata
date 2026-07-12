@@ -98,6 +98,7 @@ isort-check = "ruff check --select I --diff autotag_metadata"
 lint-check = { depends-on = ["pylint", "format-check", "isort-check", "typecheck"] }
 
 [tool.pixi.feature.doc.dependencies]
+imagemagick = "*"   # provides `magick` for the tour-gif task
 jupytext = "*"
 myst-nb = "*"
 myst-parser = "*"
@@ -112,8 +113,9 @@ doc = { cmd = "sphinx-build -M html . ./generated -W -n --keep-going", cwd = "do
 doc-watch = "sphinx-autobuild doc doc/generated/html --watch 'autotag_metadata/*'"
 linkcheck = { cmd = "sphinx-build -M linkcheck . ./generated -W -E", cwd = "doc" }
 screenshots = { cmd = "python doc/generate_tour_screenshots.py", env = { QT_QPA_PLATFORM = "offscreen", QT_SCALE_FACTOR = "2", FONTCONFIG_FILE = "$CONDA_PREFIX/etc/fonts/fonts.conf" } }
-# Assemble the README tour.gif from the PNGs written by `screenshots` (needs ImageMagick 7 on PATH).
-tour-gif = "magick -delay 220 -loop 0 doc/images/tour-*.png -resize 1100x -layers Optimize doc/images/tour.gif"
+# Assemble the README tour.gif from the PNGs written by `screenshots`, in the order recorded in
+# doc/images/tour-order.txt (the slug-named PNGs no longer sort into tour order). Needs ImageMagick 7.
+tour-gif = "python doc/build_tour_gif.py"
 
 [tool.pixi.feature.packaging.dependencies]
 pyinstaller = "*"

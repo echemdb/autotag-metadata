@@ -54,15 +54,40 @@ def parse_yaml(text: str) -> Any:
     return yaml.safe_load(text)
 
 
+class BlockStringDumper(yaml.Dumper):
+    """Dumper that writes multi-line strings as block literals (``|``).
+
+    Markdown-valued fields (see :mod:`autotag_metadata.core.markdown_text`) are
+    multi-line strings. PyYAML's default style renders them as one quoted scalar
+    with ``\\n`` escapes, which is unreadable in a sidecar that humans and git
+    diffs have to look at; ``|`` keeps the prose laid out as written.
+    """
+
+
+def _represent_str(dumper: yaml.Dumper, data: str) -> yaml.ScalarNode:
+    style = "|" if "\n" in data else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
+
+
+BlockStringDumper.add_representer(str, _represent_str)
+
+
 def dump_yaml(data: Any) -> str:
-    """Serialize *data* to a YAML string."""
-    return yaml.dump(data, sort_keys=False, allow_unicode=True)
+    """Serialize *data* to a YAML string, multi-line strings as ``|`` blocks.
+
+    >>> print(dump_yaml({"name": "CV-01", "notes": "## Prep\\nRinsed.\\n"}), end="")
+    name: CV-01
+    notes: |
+      ## Prep
+      Rinsed.
+    """
+    return yaml.dump(data, Dumper=BlockStringDumper, sort_keys=False, allow_unicode=True)
 
 
 def dump_yaml_to_file(data: Any, filepath: str) -> None:
     """Write *data* as YAML to *filepath*."""
     with open(filepath, "w", encoding="utf-8") as f:
-        yaml.dump(data, f, sort_keys=False, allow_unicode=True)
+        f.write(dump_yaml(data))
 
 
 def dump_json(data: Any) -> str:

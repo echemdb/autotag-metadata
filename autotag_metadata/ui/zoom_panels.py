@@ -341,7 +341,9 @@ class ZoomFormView(_ZoomPanelBase):
 
         A dict/list subtree is shown directly; a scalar leaf (e.g.
         ``components.0.type``) is shown as a single editable field keyed by the
-        last path segment.
+        last path segment. A *string* leaf gets the full-height markdown editor —
+        the panel becomes a prose editor for that one field, which is also how a
+        one-line string is first given a line break (and so turned into prose).
         """
         found, node = self._doc.resolve(self._path)
         path_missing = bool(self._path) and not found
@@ -351,16 +353,19 @@ class ZoomFormView(_ZoomPanelBase):
         if found and isinstance(node, (dict, list)):
             self._scalar_key = None
             self._form.set_zoom_enabled(True)
+            self._form.set_markdown_leaf(False)
             self._form.load(node)
         elif found:
             # A scalar leaf has no subtree to drill into; its row's filter button
             # would re-append the leaf key, so suppress it here.
             self._scalar_key = self._path.split(".")[-1]
             self._form.set_zoom_enabled(False)
+            self._form.set_markdown_leaf(isinstance(node, str))
             self._form.load({self._scalar_key: node})
         else:
             self._scalar_key = None
             self._form.set_zoom_enabled(True)
+            self._form.set_markdown_leaf(False)
             self._form.load({})
         self._syncing = False
 

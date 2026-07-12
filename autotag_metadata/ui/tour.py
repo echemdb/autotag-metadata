@@ -36,12 +36,18 @@ class TourStep:
     or hold several widgets whose union rectangle is highlighted together.
     *on_enter* runs when the step is shown — e.g. to reveal a hidden panel so it
     can be highlighted.
+
+    *slug* is the step's stable identifier, independent of its position and of
+    the section number in *title*. Screenshots are named after it, so inserting
+    or renumbering a step does not rename (and thereby break) the images the
+    documentation references.
     """
 
     title: str
     text: str
     targets: list[QtWidgets.QWidget | Callable[[], QtCore.QRect | None]] = field(default_factory=list)
     on_enter: Callable[[], None] | None = None
+    slug: str = ""
 
 
 class TourOverlay(QtWidgets.QWidget):

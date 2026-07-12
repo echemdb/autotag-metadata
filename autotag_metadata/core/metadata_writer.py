@@ -27,9 +27,7 @@ import time
 from enum import Enum
 from pathlib import Path
 
-import yaml
-
-from autotag_metadata.core.yaml_utils import json_default
+from autotag_metadata.core.yaml_utils import dump_yaml, json_default
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +95,9 @@ def write_metadata(
         if format == MetadataFormat.JSON:
             json.dump(parameters, metadata_file, indent=2, ensure_ascii=False, default=json_default)
         else:
-            yaml.dump(parameters, metadata_file, sort_keys=False, allow_unicode=True)
+            # dump_yaml, not yaml.dump: markdown-valued fields are multi-line strings
+            # and must reach the sidecar as readable `|` block literals.
+            metadata_file.write(dump_yaml(parameters))
     logger.info("wrote metadata for %s", meta_path)
 
 

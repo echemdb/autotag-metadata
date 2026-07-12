@@ -24,6 +24,9 @@ from typing import Any
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
+from autotag_metadata.core.markdown_text import is_markdown_value
+from autotag_metadata.ui.markdown_edit import MarkdownEdit
+
 # ---------------------------------------------------------------------------
 # Visual constants & palette helpers
 # ---------------------------------------------------------------------------
@@ -166,6 +169,63 @@ class _FieldRow(QtWidgets.QWidget):
         layout.addWidget(widget, 1)
         if on_zoom is not None:
             layout.addWidget(_make_zoom_button(zoom_path, on_zoom))
+
+
+# ---------------------------------------------------------------------------
+# _MarkdownRow
+# ---------------------------------------------------------------------------
+
+
+class _MarkdownRow(QtWidgets.QWidget):
+    """A prose row: key label beside a WYSIWYG markdown editor.
+
+    Used for any multi-line string leaf (see
+    :func:`~autotag_metadata.core.markdown_text.is_markdown_value`), and — with
+    *compact* off — as the whole body of a panel zoomed onto a string leaf.
+    """
+
+    def __init__(
+        self,
+        key: str,
+        val: str,
+        node: dict,
+        even: bool,
+        callback: Callable,
+        zoom_path: str | None = None,
+        on_zoom: Callable[[str], None] | None = None,
+        compact: bool = True,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(QtGui.QPalette.ColorRole.Window, _row_color(palette, even))
+        self.setPalette(palette)
+
+        label = QtWidgets.QLabel(str(key))
+        # Top-aligned, unlike the one-line rows: the editor is several lines tall,
+        # and a vertically centred key would float away from its field.
+        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTop)
+        label.setFixedWidth(130)
+        label.setStyleSheet("font-size: 12px; padding-right: 6px; padding-top: 4px;")
+
+        self._editor = MarkdownEdit(val, compact=compact)
+        self._editor.setStyleSheet(f"QTextEdit {{ border-left: 3px solid {_STR_BORDER}; }}")
+        self._editor.text_committed.connect(lambda text, n=node, k=key: _update(n, k, text, callback))
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(4, 2, 0, 2)
+        layout.setSpacing(0)
+        layout.addWidget(label)
+        layout.addWidget(self._editor, 1)
+        if on_zoom is not None:
+            button = _make_zoom_button(zoom_path, on_zoom)
+            button.setToolTip(f"Open “{zoom_path}” in this panel as a full editor")
+            wrapper = QtWidgets.QVBoxLayout()
+            wrapper.setContentsMargins(0, 0, 0, 0)
+            wrapper.addWidget(button)
+            wrapper.addStretch()
+            layout.addLayout(wrapper)
 
 
 # ---------------------------------------------------------------------------
@@ -336,6 +396,7 @@ class YamlFormView(QtWidgets.QScrollArea):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._data: dict | list = {}
         self._zoom_enabled = True
+        self._markdown_leaf = False
         self._root_widget = QtWidgets.QWidget()
         self._root_layout = QtWidgets.QVBoxLayout(self._root_widget)
         self._root_layout.setContentsMargins(0, 0, 0, 0)
@@ -386,6 +447,17 @@ class YamlFormView(QtWidgets.QScrollArea):
         """
         self._zoom_enabled = enabled
 
+    def set_markdown_leaf(self, enabled: bool) -> None:
+        """Render this form's single string leaf as a full-height markdown editor.
+
+        Set by a panel zoomed onto a string leaf (``experiment.notes``). This is
+        also the only way to *create* prose: a one-line string is not yet
+        markdown by the multi-line rule, so a QLineEdit would give the user no
+        way to type the first line break. Zooming in hands them a real editor, and
+        once the value has a line break it renders as prose everywhere.
+        """
+        self._markdown_leaf = enabled
+
     # ------------------------------------------------------------------
 
     def _zoom_cb(self) -> Callable[[str], None] | None:
@@ -397,6 +469,19 @@ class YamlFormView(QtWidgets.QScrollArea):
 
     def _rebuild(self) -> None:
         _clear_layout(self._root_layout)
+        if self._markdown_leaf and isinstance(self._data, dict) and len(self._data) == 1:
+            key, val = next(iter(self._data.items()))
+            row = _MarkdownRow(
+                str(key),
+                val if isinstance(val, str) else "",
+                self._data,
+                True,
+                self._on_value_changed,
+                compact=False,
+            )
+            # No trailing stretch: the editor is the panel, so let it take the height.
+            self._root_layout.addWidget(row, 1)
+            return
         if isinstance(self._data, list):
             self._build_list_items(self._root_layout, self._data, depth=0, prefix="")
         else:
@@ -409,7 +494,11 @@ class YamlFormView(QtWidgets.QScrollArea):
         leaf_index = 0
         for key, val in node.items():
             child = _child_path(prefix, key)
-            if _is_value_unit_dict(val):
+            if is_markdown_value(val):
+                row = _MarkdownRow(str(key), val, node, leaf_index % 2 == 0, self._on_value_changed, child, cb)
+                layout.addWidget(row)
+                leaf_index += 1
+            elif _is_value_unit_dict(val):
                 row = _ValueUnitRow(str(key), val, leaf_index % 2 == 0, self._on_value_changed, child, cb)
                 layout.addWidget(row)
                 leaf_index += 1
@@ -599,8 +688,19 @@ def _is_list_of_dicts(lst: list) -> bool:
 
 
 def _is_value_unit_dict(val) -> bool:
-    """True when val is a flat dict (no nested dicts/lists) containing a 'value' key."""
-    return isinstance(val, dict) and "value" in val and all(not isinstance(v, (dict, list)) for v in val.values())
+    """True when val is a flat dict (no nested dicts/lists) containing a 'value' key.
+
+    A prose member disqualifies the dict: the inline value/unit row is built from
+    one-line fields, and a QLineEdit would silently flatten a multi-line string.
+    Such a dict falls back to a collapsible section, where the prose member gets a
+    proper markdown row.
+    """
+    return (
+        isinstance(val, dict)
+        and "value" in val
+        and all(not isinstance(v, (dict, list)) for v in val.values())
+        and not any(is_markdown_value(v) for v in val.values())
+    )
 
 
 def _deep_copy(obj: Any) -> Any:

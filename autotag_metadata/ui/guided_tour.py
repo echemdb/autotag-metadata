@@ -53,6 +53,15 @@ curation:
       name: J. Smith
       orcid: https://orcid.org/0000-0000-0000-0000
 experimental:
+  notes: |
+    ## Sample preparation
+
+    Au(111) single crystal **flame-annealed**, then:
+
+    - 10 min sonication in ultrapure water
+    - dried under N2
+
+    Electrolyte prepared fresh; see [echemdb](https://echemdb.org).
   tags:
     - BCV
   instrumentation:
@@ -165,6 +174,11 @@ class GuidedTour:
     def step_titles(self) -> list[str]:
         return [step.title for step in self._overlay._steps] if self._overlay is not None else []
 
+    @property
+    def step_slugs(self) -> list[str]:
+        """Stable per-step identifiers, in tour order. Screenshots are named after these."""
+        return [step.slug for step in self._overlay._steps] if self._overlay is not None else []
+
     def show_step(self, index: int) -> None:
         """Jump the running tour to *index* and run that step's ``on_enter``."""
         if self._overlay is not None:
@@ -220,6 +234,12 @@ class GuidedTour:
 
     def _show_json(self) -> None:
         self._app._view_tabs.setCurrentIndex(_JSON_TAB)
+
+    def _show_prose(self) -> None:
+        """Zoom the Form onto `experimental`, where the example's prose field lives."""
+        app = self._app
+        app._view_tabs.setCurrentIndex(_FORM_TAB)
+        app._form_multiview.set_layout({"path": "experimental"})
 
     def _show_broken_yaml(self) -> None:
         """Inject a syntax error (over-indented list-item key) for the user to spot and fix."""
@@ -358,18 +378,21 @@ class GuidedTour:
                 "Welcome to Autotag Metadata",
                 "This tool watches a folder and writes a <code>.metadata.yaml</code> sidecar next to "
                 "every new file, using the metadata you prepare here. Let's walk through it.",
+                slug="welcome",
             ),
             TourStep(
                 "1. Choose a folder to watch",
                 "Pick the folder to watch with <b>Browse…</b>, then press <b>Activate</b>. While "
                 "active, every new file in it is tagged with your metadata.",
                 [app.ledFolder, app.btnBrowse, app.btnActivate],
+                slug="choose-folder",
             ),
             TourStep(
                 "2.1 Filter which files",
                 "Restrict tagging to matching files with comma-separated globs "
                 "(e.g. <code>*.csv,*.tsv</code>), and tick <b>Recursive</b> to include sub-folders.",
                 [app._patterns_label, app.ledFilePatterns, app.cbRecursiveWatch],
+                slug="filter-files",
             ),
             TourStep(
                 "2.2 Sidecar suffix",
@@ -377,6 +400,7 @@ class GuidedTour:
                 "default <code>.metadata.yaml</code>, or type a custom extension "
                 "(e.g. <code>.ec-lab.metadata.yaml</code>) to distinguish sidecar families.",
                 [app._suffix_label, app.ledMetaSuffix],
+                slug="sidecar-suffix",
             ),
             TourStep(
                 "2.6 Output format",
@@ -384,6 +408,7 @@ class GuidedTour:
                 "<b>JSON</b> — independently of the suffix. YAML stays human-friendly; choose JSON "
                 "when a downstream tool consumes the sidecar.",
                 [app._format_label, app.cbMetaFormat],
+                slug="output-format",
             ),
             TourStep(
                 "3.1 Switch between views",
@@ -392,6 +417,7 @@ class GuidedTour:
                 "freely between them.",
                 [app._view_tabs],
                 on_enter=self._show_form,
+                slug="switch-views",
             ),
             TourStep(
                 "3.2 The Form editor",
@@ -399,30 +425,45 @@ class GuidedTour:
                 "sections that mirror the document structure.",
                 [self._form_body_rect, self._tab_rect_supplier(_FORM_TAB)],
                 on_enter=self._show_form,
+                slug="form-editor",
             ),
             TourStep(
-                "3.3 The YAML editor",
+                "3.3 Prose fields",
+                "A field holding more than one line of text — like <code>experimental.notes</code> "
+                "here — is edited as <b>Markdown</b>, formatted as you type: start a line with "
+                "<code>## </code> for a heading or <code>- </code> for a bullet, and use "
+                "<b>Ctrl+B</b> / <b>Ctrl+I</b> or the small toolbar. Click <b>⤢</b> on the row to "
+                "open it as a full-height editor, or <b>Source</b> to see the raw Markdown.",
+                [self._form_body_rect, self._tab_rect_supplier(_FORM_TAB)],
+                on_enter=self._show_prose,
+                slug="prose-fields",
+            ),
+            TourStep(
+                "3.4 The YAML editor",
                 "The YAML tab is the same document as raw text, with syntax highlighting. Its tab "
                 "blinks red when the YAML has a syntax error.",
                 [self._yaml_body_rect, self._tab_rect_supplier(_YAML_TAB)],
                 on_enter=self._show_yaml,
+                slug="yaml-editor",
             ),
             TourStep(
-                "3.4 Fixing a syntax error",
+                "3.5 Fixing a syntax error",
                 "This document now has a mistake: a line under <code>system.electrodes</code> is "
                 "indented one space too far. The tab blinks red and the exact line is highlighted — "
                 "hover over the tab for the details. Fix the indentation so it lines up with its "
                 "sibling keys, then press Next.",
                 [self._yaml_body_rect, self._tab_rect_supplier(_YAML_TAB)],
                 on_enter=self._show_broken_yaml,
+                slug="fixing-syntax-error",
             ),
             TourStep(
-                "3.5 The JSON editor",
+                "3.6 The JSON editor",
                 "The JSON tab mirrors the whole document as raw JSON — the same content, a different "
                 "serialization. Edits sync back into the Form and YAML views, and its tab blinks red "
                 "on a syntax error, just like YAML.",
                 [app._json_edit, self._tab_rect_supplier(_JSON_TAB)],
                 on_enter=self._show_json,
+                slug="json-editor",
             ),
             TourStep(
                 "4.1 Open the Library",
@@ -430,6 +471,7 @@ class GuidedTour:
                 "Snippets, Templates, and Views.",
                 [sidebar_btn],
                 on_enter=self._open_library,
+                slug="open-library",
             ),
             TourStep(
                 "4.2 The Library panel",
@@ -437,6 +479,7 @@ class GuidedTour:
                 "documents), and <b>Views</b> (saved panel layouts). Save from here and "
                 "double-click to apply.",
                 [self._library_tab_bar_rect, app._snippet_dock, app._templates_dock, app._views_dock],
+                slug="library-panel",
             ),
             TourStep(
                 "4.3 Load a Template",
@@ -445,6 +488,7 @@ class GuidedTour:
                 "measurement from a known structure. Try it now, then press Next.",
                 [self._library_tab_bar_rect, app._templates_dock, self._form_body_rect],
                 on_enter=self._prep_templates,
+                slug="load-template",
             ),
             TourStep(
                 "4.4 Extend with a Snippet",
@@ -454,6 +498,7 @@ class GuidedTour:
                 "Try it now, then press Next.",
                 [self._library_tab_bar_rect, app._snippet_dock, self._form_body_rect],
                 on_enter=self._show_snippets,
+                slug="extend-snippet",
             ),
             TourStep(
                 "4.5 Zoom into a subtree",
@@ -462,6 +507,7 @@ class GuidedTour:
                 "button steps back up. Try zooming into a section, then press Next.",
                 [self._editor_stack_rect],
                 on_enter=self._prep_panels,
+                slug="zoom-subtree",
             ),
             TourStep(
                 "4.6 Split into panels",
@@ -471,6 +517,7 @@ class GuidedTour:
                 "Add a panel now, then press Next.",
                 [self._editor_stack_rect],
                 on_enter=self._prep_panels,
+                slug="split-panels",
             ),
             TourStep(
                 "4.7 Save the layout as a View",
@@ -480,6 +527,7 @@ class GuidedTour:
                 "Try it now, then press Next.",
                 [self._library_tab_bar_rect, app._views_dock, self._editor_stack_rect],
                 on_enter=self._show_views,
+                slug="save-view",
             ),
             TourStep(
                 "5. The live file",
@@ -494,6 +542,7 @@ class GuidedTour:
                     app.btnUseTemporaryFile,
                 ],
                 on_enter=self._show_form,
+                slug="live-file",
             ),
             TourStep(
                 "6. Drop files on demand",
@@ -502,6 +551,7 @@ class GuidedTour:
                 "the current metadata. The <b>Log</b> panel shows what happened.",
                 [dropzone_btn, app._dropzone_dock],
                 on_enter=self._reveal_dropzone,
+                slug="drop-files",
             ),
             TourStep(
                 "7. The Log",
@@ -510,9 +560,11 @@ class GuidedTour:
                 "which files were processed.",
                 [log_btn, app._log_dock],
                 on_enter=self._reveal_log,
+                slug="log",
             ),
             TourStep(
                 "You're ready",
                 "That's the tour. Re-open it any time from <b>Help → Show Tour</b>. Happy tagging!",
+                slug="ready",
             ),
         ]
